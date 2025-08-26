@@ -38,6 +38,7 @@ a {
   text-decoration: none;
 }
 a:hover {
+  color: #2a5d9f;
   text-decoration: underline;
 }
 table {
