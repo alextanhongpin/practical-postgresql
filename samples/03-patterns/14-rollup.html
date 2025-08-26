@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>14-rollup</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="rollups-summaries-without-storing-everything">Rollups (Summaries
+Without Storing Everything)</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>Your dashboard shows “top users this week,” “daily active users,” and
+“page views per day.” Reading raw events every time is slow and
+expensive. You need summaries that are fast to query, while staying
+reasonably fresh.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>Rollups are aggregate summaries (SUM/COUNT/etc.) grouped by keys
+(user_id, day).</li>
+<li>Two modes: compute on demand (always fresh) or precompute/store
+(fast reads, some staleness).</li>
+<li>Incremental rollups process only new data since a watermark to keep
+work small.</li>
+</ul>
+<p>A rollup is “sum / count / stats grouped by something.” Do it on
+demand (fresh but maybe slow) or pre-store (fast but stale risk). Choose
+per use case.</p>
+<h2 id="implementation-step-by-step-sql">Implementation (step by step
+SQL)</h2>
+<h2 id="basic-leaderboard">1. Basic leaderboard</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> game_score (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  user_id <span class="dt">INT</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  score   <span class="dt">INT</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  played_at timestamptz</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">-- Sample data</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> game_score (user_id, score, played_at) <span class="kw">VALUES</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span>, <span class="dv">10</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;5 days&#39;</span>),</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span>, <span class="dv">20</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;4 days&#39;</span>),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span>, <span class="dv">15</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;3 days&#39;</span>),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">2</span>,  <span class="dv">5</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;5 days&#39;</span>),</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">2</span>, <span class="dv">30</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;3 days&#39;</span>),</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">3</span>, <span class="dv">50</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;5 days&#39;</span>),</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">3</span>, <span class="dv">10</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;2 days&#39;</span>),</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">4</span>,  <span class="dv">8</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;3 days&#39;</span>);</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co">-- Total per user</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> user_id, <span class="fu">SUM</span>(score) <span class="kw">AS</span> total_score</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> game_score</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> user_id</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> total_score <span class="kw">DESC</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co">-- Daily leaderboard</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> user_id, <span class="dt">date</span>(played_at) <span class="kw">AS</span> <span class="dt">day</span>, <span class="fu">SUM</span>(score) <span class="kw">AS</span> daily_score</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> game_score</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> user_id, <span class="dt">day</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">day</span> <span class="kw">DESC</span>, daily_score <span class="kw">DESC</span>;</span></code></pre></div>
+<h2 id="page-view-counts">2. Page view counts</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> page_view (</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  page_id <span class="dt">INT</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  viewed_at timestamptz</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">-- Sample data</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> page_view (page_id, viewed_at) <span class="kw">VALUES</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">101</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;5 days&#39;</span>),</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">101</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;4 days&#39;</span>),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">102</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;3 days&#39;</span>),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">102</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;3 days&#39;</span>),</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">103</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;2 days&#39;</span>),</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">103</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;1 days&#39;</span>),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">104</span>, now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;1 days&#39;</span>);</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> page_id, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> total_views</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> page_view</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> page_id</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> total_views <span class="kw">DESC</span>;</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> page_id, <span class="dt">date</span>(viewed_at) <span class="kw">AS</span> <span class="dt">day</span>, <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">AS</span> daily_views</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> page_view</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> page_id, <span class="dt">day</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="dt">day</span> <span class="kw">DESC</span>, daily_views <span class="kw">DESC</span>;</span></code></pre></div>
+<h2 id="when-it-gets-slow">3. When it gets slow</h2>
+<p>Full scans hurt once rows explode. Options:</p>
+<ul>
+<li>Covering index on (grouping_column [, date])</li>
+<li>Pre-aggregate periodically into a smaller table</li>
+<li>Materialized view with refresh</li>
+<li>Incremental “delta” merges</li>
+</ul>
+<h2 id="incremental-pattern-add-only-new-rows">4. Incremental pattern
+(add only new rows)</h2>
+<p>Store last processed timestamp + accumulated totals.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> leaderboard_rollup (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  user_id <span class="dt">INT</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  total_score BIGINT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  last_updated timestamptz</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> <span class="fu">last</span> <span class="kw">AS</span> (</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="fu">coalesce</span>(<span class="fu">max</span>(last_updated), <span class="fu">to_timestamp</span>(<span class="dv">0</span>)) <span class="kw">AS</span> last_ts <span class="kw">FROM</span> leaderboard_rollup</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> leaderboard_rollup (user_id,total_score,last_updated)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> user_id, <span class="fu">SUM</span>(score), now()</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> game_score, <span class="fu">last</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> played_at <span class="op">&gt;</span> <span class="fu">last</span>.last_ts</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> user_id</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (user_id)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>DO <span class="kw">UPDATE</span> <span class="kw">SET</span> total_score <span class="op">=</span> leaderboard_rollup.total_score <span class="op">+</span> EXCLUDED.total_score,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>              last_updated <span class="op">=</span> EXCLUDED.last_updated;</span></code></pre></div>
+<p>Same idea for page views.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> page_view_rollup (</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  page_id <span class="dt">INT</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  total_views BIGINT <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  last_updated timestamptz</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> <span class="fu">last</span> <span class="kw">AS</span> (</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="fu">coalesce</span>(<span class="fu">max</span>(last_updated), <span class="fu">to_timestamp</span>(<span class="dv">0</span>)) <span class="kw">AS</span> last_ts <span class="kw">FROM</span> page_view_rollup</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> page_view_rollup (page_id,total_views,last_updated)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> page_id, <span class="fu">COUNT</span>(<span class="op">*</span>), now()</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> page_view, <span class="fu">last</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> viewed_at <span class="op">&gt;</span> <span class="fu">last</span>.last_ts</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">GROUP</span> <span class="kw">BY</span> page_id</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (page_id)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>DO <span class="kw">UPDATE</span> <span class="kw">SET</span> total_views <span class="op">=</span> page_view_rollup.total_views <span class="op">+</span> EXCLUDED.total_views,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>              last_updated <span class="op">=</span> EXCLUDED.last_updated;</span></code></pre></div>
+<h2 id="materialized-view-alternative">5. Materialized view
+alternative</h2>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">MATERIALIZED</span> <span class="kw">VIEW</span> leaderboard_mv <span class="kw">AS</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> user_id, <span class="fu">SUM</span>(score) <span class="kw">AS</span> total_score</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> game_score <span class="kw">GROUP</span> <span class="kw">BY</span> user_id;</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> <span class="kw">ON</span> leaderboard_mv (user_id);</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co">-- Later</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">REFRESH</span> <span class="kw">MATERIALIZED</span> <span class="kw">VIEW</span> CONCURRENTLY leaderboard_mv; <span class="co">-- needs unique index</span></span></code></pre></div>
+<p>Pros: fast reads. Cons: refresh lag + overhead.</p>
+<h2 id="hybrid-strategy">6. Hybrid strategy</h2>
+<ul>
+<li>Real-time last X minutes from base table</li>
+<li>Historical older data from rollup table/materialized view</li>
+<li>UNION ALL them for a “live” dashboard.</li>
+</ul>
+<h2 id="correctness-pitfalls">7. Correctness pitfalls</h2>
+<ul>
+<li>Late arriving rows (timestamps out of order) → design a grace window
+(process last 5 minutes again) or store watermark and allow minor
+duplication then de-dup.</li>
+<li>Clock skew (multiple app servers) → prefer server-generated
+timestamptz default.</li>
+<li>Double counting: ensure incremental WHERE strictly greater than last
+watermark, or record high-water mark separately.</li>
+</ul>
+<h2 id="performance-tips">8. Performance tips</h2>
+<ul>
+<li>Avoid COUNT(*) over giant unfiltered table for every dashboard
+refresh; cache result for a short TTL.</li>
+<li>Batch updates (process 10k rows per run) to keep VACUUM happy.</li>
+<li>Use BIGINT for accumulating counters.</li>
+</ul>
+<h2 id="choosing-cheat-sheet">9. Choosing cheat sheet</h2>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Pick</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fresh every view</td>
+<td>On-demand GROUP BY</td>
+</tr>
+<tr>
+<td>Fast repeated heavy query</td>
+<td>Materialized view or rollup table</td>
+</tr>
+<tr>
+<td>Large stream append</td>
+<td>Incremental rollup + final MV snapshot</td>
+</tr>
+<tr>
+<td>Mixed real-time + history</td>
+<td>Hybrid (recent live + old pre-agg)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="recap">10. Recap</h2>
+<p>Rollups trade compute (do it now) for storage (do it once, serve
+many). Start with plain GROUP BY. Add incremental table or MV only when
+latency or cost becomes painful.</p>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>On-demand GROUP BY is simple and fresh but can be slow at
+scale.</li>
+<li>Materialized views make reads fast, but you need to schedule REFRESH
+and handle staleness.</li>
+<li>Incremental tables are flexible and can be near real‑time, but need
+careful watermarking and de‑duplication.</li>
+<li>Hybrid approach gives “live-ish” dashboards: small real-time window
+from base tables plus historical rollups.</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>Double counting when merging increments; always use a strict
+watermark and idempotent upserts.</li>
+<li>Late events arriving out of order; re-scan a small grace
+window.</li>
+<li>Forgetting a unique index for REFRESH MATERIALIZED VIEW
+CONCURRENTLY.</li>
+<li>Summaries drifting from source of truth; schedule audits or
+recompute periodically.</li>
+</ul>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Start with a plain GROUP BY. When queries get slow, add either a
+materialized view or an incremental rollup table. Handle late data with
+a grace window and protect against double counting.</p>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Add a monthly rollup table and write a job that processes only new
+events.</li>
+<li>Build a materialized view for page views and schedule a concurrent
+refresh.</li>
+<li>Create a hybrid query that unions “last 15 minutes live” with “older
+than 15 minutes from rollup.”</li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Purpose</strong>: Summarize large detail sets either
+on-demand or precomputed.</li>
+<li><strong>On-Demand</strong>: Use GROUP BY; always fresh but slower at
+scale.</li>
+<li><strong>Incremental</strong>: Process only new rows after a
+watermark; handle late arrivals.</li>
+<li><strong>Materialized View</strong>: Fast snapshot with periodic
+REFRESH; stale between refreshes.</li>
+<li><strong>Hybrid</strong>: Combine recent live data with historical
+rollups; merging adds complexity.</li>
+<li><strong>Indexing</strong>: Index group-by columns and time for
+incremental scans; avoid oversized indexes.</li>
+<li><strong>Pitfalls</strong>: Double counting, missing late arrivals,
+and materialized view lock contention.</li>
+<li><strong>Decision Starter</strong>: Start with plain queries; add a
+materialized view; add incremental processing if latency is
+unacceptable.</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Materialized views:
+https://www.postgresql.org/docs/current/rules-materializedviews.html</li>
+<li>Incremental refresh (approaches):
+https://www.postgresql.org/docs/current/sql-refreshmaterializedview.html</li>
+</ul>
+</body>
+</html>

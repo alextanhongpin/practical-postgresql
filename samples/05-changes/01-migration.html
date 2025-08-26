@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01-migration</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="safe-migrations">Safe Migrations</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>You need to add columns, indexes, and constraints to production
+tables that serve live traffic. The goal is to change the schema safely
+with minimal blocking, clear rollback or roll‑forward options, and good
+communication.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>Prefer two-phase changes: declare fast metadata first, move data
+gradually, validate last.</li>
+<li>Avoid long ACCESS EXCLUSIVE locks on hot tables; use CONCURRENTLY
+and NOT VALID where possible.</li>
+<li>Batch backfills, watch locks and replication lag, and be ready to
+roll forward instead of rolling back.</li>
+</ul>
+<p>Goal: Apply DDL in production with minimal locks, clear rollback or
+roll-forward, and good communication.</p>
+<h2 id="core-principles">1. Core Principles</h2>
+<ul>
+<li>Small steps beat giant scripts.</li>
+<li>Wrap changes in a transaction when allowed (not for CREATE INDEX
+CONCURRENTLY, some ALTER TYPE).</li>
+<li>Avoid long ACCESS EXCLUSIVE locks on hot tables.</li>
+<li>Be able to pause or roll forward. Rolling back large partial changes
+is risky.</li>
+</ul>
+<h2 id="standard-playbook">2. Standard Playbook</h2>
+<ol type="1">
+<li>Plan (list risk ops: type changes, defaulted columns, big table
+rewrites)</li>
+<li>Test on staging clone (row counts similar)</li>
+<li>Backup or confirm PITR window healthy</li>
+<li>Communicate window + fallback</li>
+<li>Run migration tool (Flyway, Sqitch, Rails, etc.)</li>
+<li>Monitor: locks, errors, replication lag</li>
+<li>Validate post-change (schema, sample queries)</li>
+</ol>
+<h2 id="change-catalog-where-to-find-details">3. Change Catalog (where
+to find details)</h2>
+<p>This chapter is the high-level playbook. Detailed, copyable SQL lives
+in focused chapters:</p>
+<ul>
+<li>Add/rename/drop columns, backfills, SELECT-list safety → see <a href="03-columns.md">Safe Column Changes</a></li>
+<li>Table-level ops (rename table, split hot/cold, lock watching) → see
+<a href="02-table.md">Safe Table Changes</a></li>
+<li>Type evolution (enums, int→bigint, precision) → see <a href="04-types.md">Safe Type Changes</a></li>
+<li>Constraints (NOT VALID/VALIDATE, UNIQUE via index, NOT NULL safely)
+→ see <a href="05-constraints.md">Constraints</a></li>
+<li>Roles &amp; users for migration separation of duties → see <a href="06-roles-and-users.md">Roles &amp; Users</a></li>
+</ul>
+<p>Quick references</p>
+<ul>
+<li>Indexes on hot tables: CREATE INDEX CONCURRENTLY (details in <a href="02-table.md">Safe Table Changes</a>)</li>
+<li>Foreign keys on existing data: ADD … NOT VALID then VALIDATE
+(details in <a href="05-constraints.md">Constraints</a>)</li>
+<li>Large type changes: shadow column + swap (details in <a href="04-types.md">Safe Type Changes</a>)</li>
+<li>Backfills: PK-ordered batches with small commits (details in <a href="03-columns.md">Safe Column Changes</a>)</li>
+</ul>
+<h2 id="rollback-vs-roll-forward">4. Rollback vs Roll Forward</h2>
+<p>DDL rollback can be messy. Prefer forward fixes: create a missing
+index, adjust a new column, etc. Keep a quick revert script only for
+trivial additions if disaster strikes early.</p>
+<h2 id="monitoring-during-migration">5. Monitoring During Migration</h2>
+<p>Watch:</p>
+<ul>
+<li><code>pg_stat_activity</code> for waiting queries</li>
+<li><code>pg_locks</code> for long ACCESS EXCLUSIVE</li>
+<li>replication lag (if streaming replicas) to catch cascading
+delay</li>
+</ul>
+<h2 id="checklist-before-you-run">6. Checklist Before You Run</h2>
+<ul>
+<li>Tested on realistic data size?</li>
+<li>Backup / PITR window verified?</li>
+<li>Scripts idempotent (re-run safe)?</li>
+<li>Long rewrites split into shadow columns?</li>
+<li>FKs / CHECK added with NOT VALID when large?</li>
+<li>Plan to backfill in batches documented?</li>
+<li>Communication + monitoring in place?</li>
+</ul>
+<h2 id="common-pitfalls">7. Common Pitfalls</h2>
+<table>
+<colgroup>
+<col style="width: 63%" />
+<col style="width: 36%" />
+</colgroup>
+<thead>
+<tr>
+<th>Mistake</th>
+<th>Pain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Adding column WITH default on huge table (old versions)</td>
+<td>Full table rewrite &amp; lock</td>
+</tr>
+<tr>
+<td>Single transaction with many long steps</td>
+<td>Lock pileups, hard rollback</td>
+</tr>
+<tr>
+<td>No batch size limit in backfill</td>
+<td>Long running transaction, bloat</td>
+</tr>
+<tr>
+<td>Dropping index before verifying replacement</td>
+<td>Sudden query regression</td>
+</tr>
+</tbody>
+</table>
+<p>Start minimal, measure, iterate. Safety is structure + patience.</p>
+<h2 id="variations-and-tradeoffs">8. Variations and Trade‑Offs</h2>
+<ul>
+<li>Tooling: Framework migrations vs. declarative tools (Sqitch/Flyway).
+Declarative reduces drift; framework integrates with app deploys.</li>
+<li>Zero-downtime app changes: Write‑through compatibility (support both
+schemas for a deploy), then cut over.</li>
+<li>Blue/green vs in‑place: Blue/green isolates risk but costs infra;
+in‑place is cheaper but needs careful lock control.</li>
+</ul>
+<h2 id="pitfalls">9. Pitfalls</h2>
+<ul>
+<li>Adding defaults on very large tables in older Postgres versions
+triggers a table rewrite and long lock.</li>
+<li>Running CREATE INDEX (non‑CONCURRENTLY) on hot tables blocks
+writes.</li>
+<li>Single huge UPDATE backfills cause long transactions and bloat;
+always batch.</li>
+</ul>
+<h2 id="recap-short-summary">10. Recap (Short Summary)</h2>
+<p>Declare structure fast, migrate data gradually, validate correctness
+later. Use CONCURRENTLY and NOT VALID to keep locks short, and favor
+roll‑forward fixes.</p>
+<h2 id="optional-exercises">11. Optional Exercises</h2>
+<ul>
+<li>Add a NULLable column on a big table, backfill in batches, then set
+NOT NULL and DEFAULT.</li>
+<li>Build a UNIQUE constraint by creating the index CONCURRENTLY and
+attaching it.</li>
+<li>Add a FOREIGN KEY with NOT VALID, fix violations, then VALIDATE in a
+quiet window.</li>
+</ul>
+<h2 id="summary-cheat-sheet">12. Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Planning</strong>: Classify risky ops (rewrite, long scan)
+upfront. Impact: none. Mitigation: avoid surprise long locks. Tip:
+estimate sizes with pg_relation_size.</li>
+<li><strong>Adding Column</strong>: Add NULLable without default; batch
+backfill; add default + NOT NULL last. Impact: metadata then short
+locks. Risk: table rewrite/long lock (older versions). Tip: PG 11+ skips
+rewrite for constant defaults.</li>
+<li><strong>Backfill</strong>: Use small ordered batches (PK
+range/LIMIT) with commits. Impact: short transactions. Risk: bloat,
+autovacuum pressure. Tip: stop when 0 rows updated.</li>
+<li><strong>Creating Index</strong>: Use CREATE INDEX CONCURRENTLY on
+hot/big tables. Impact: minimal blocking; two scans. Risk: read/write
+blocking avoided. Tip: not inside a transaction.</li>
+<li><strong>Unique Constraint</strong>: Build unique index CONCURRENTLY
+then attach constraint. Impact: same as above. Risk: avoid long ACCESS
+EXCLUSIVE lock.</li>
+<li><strong>Foreign Key</strong>: Add NOT VALID then VALIDATE later.
+Impact: fast add; later read-only scan. Risk: long blocking validation
+avoided. Tip: validate in low-traffic window.</li>
+<li><strong>Type Change (Large)</strong>: Shadow column + batch copy +
+swap. Impact: bounded locks. Risk: table-wide rewrite avoided. Tip: keep
+old column until confident.</li>
+<li><strong>Monitoring</strong>: Watch pg_stat_activity, pg_locks,
+replication lag. Impact: early detection. Risk: silent lock
+pileups.</li>
+<li><strong>Rollback Strategy</strong>: Prefer roll forward fixes.
+Impact: avoids complex undo. Risk: half-applied states mitigated. Tip:
+keep tiny early revert script only.</li>
+<li><strong>Checklist Use</strong>: Run pre-flight checklist before
+executing. Impact: none. Risk: missing safety steps. Tip: automate where
+possible.</li>
+<li><strong>Pitfalls</strong>: WITH DEFAULT on huge table (older PG) →
+split add + default later; massive single UPDATE → batch + commit; no
+validation of new constraint → schedule VALIDATE and track.</li>
+</ul>
+<p>Key Principle: Declare structure fast (metadata), migrate data
+gradually, validate correctness late.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>CREATE INDEX CONCURRENTLY:
+https://www.postgresql.org/docs/current/sql-createindex.html#createindex-concurrently</li>
+<li>VALIDATE CONSTRAINT:
+https://www.postgresql.org/docs/current/sql-altertable.html#SQL-ALTERTABLE-VALIDATE-CONSTRAINT</li>
+<li>Explicit locking overview:
+https://www.postgresql.org/docs/current/explicit-locking.html</li>
+<li>Active sessions (pg_stat_activity):
+https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STAT-ACTIVITY</li>
+<li>Locks view (pg_locks):
+https://www.postgresql.org/docs/current/view-pg-locks.html</li>
+<li>Replication lag (pg_stat_replication):
+https://www.postgresql.org/docs/current/monitoring-stats.html#MONITORING-PG-STAT-REPLICATION</li>
+</ul>
+</body>
+</html>

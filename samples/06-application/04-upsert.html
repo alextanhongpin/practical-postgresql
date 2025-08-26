@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>04-upsert</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="upsert-insert-on-conflict-patterns">UPSERT (INSERT … ON
+CONFLICT) Patterns</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>You ingest product updates from partners. Sometimes the product is
+new; sometimes it already exists and only a few fields change. You want
+a single statement that inserts new rows and updates existing ones
+without race conditions, while avoiding useless rewrites when nothing
+changed.</p>
+<p>Goal: Insert a row if it does not exist; otherwise update parts of
+it—atomically, without race conditions. PostgreSQL gives this via
+<code>INSERT ... ON CONFLICT</code>.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>ON CONFLICT targets a unique index/constraint; conflicting rows are
+locked and either updated or ignored.</li>
+<li>Prefer WHERE guards with IS DISTINCT FROM to avoid dead updates and
+reduce WAL churn.</li>
+<li>For massive batches, stage data then merge with a single INSERT …
+SELECT ON CONFLICT statement.</li>
+</ul>
+<h2 id="implementation-step-by-step-sql">Implementation (Step by Step
+SQL)</h2>
+<h2 id="basic-keyed-upsert">1. Basic Keyed Upsert</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> products (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span>         BIGSERIAL <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    sku        TEXT <span class="kw">UNIQUE</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    name       TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    price_cents <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    updated_at timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- Insert new or update price + name when sku already exists</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> products(sku, name, price_cents)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>, $<span class="dv">3</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (sku)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>DO <span class="kw">UPDATE</span> <span class="kw">SET</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    name <span class="op">=</span> EXCLUDED.name,</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    price_cents <span class="op">=</span> EXCLUDED.price_cents,</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    updated_at <span class="op">=</span> now()</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span></code></pre></div>
+<p>Notes:</p>
+<ul>
+<li><code>EXCLUDED.column</code> = the value you attempted to
+insert.</li>
+<li>Only columns you list are updated—others keep old values.</li>
+</ul>
+<h2 id="idempotent-counter-increment-existing">2. Idempotent Counter
+(Increment Existing)</h2>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> daily_views (</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">day</span>  <span class="dt">date</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">count</span> bigint <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> daily_views(<span class="dt">day</span>, <span class="fu">count</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (<span class="dt">day</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>DO <span class="kw">UPDATE</span> <span class="kw">SET</span> <span class="fu">count</span> <span class="op">=</span> daily_views.<span class="fu">count</span> <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="fu">count</span>;</span></code></pre></div>
+<p>Why not <code>EXCLUDED.count + 1</code>? Because you inserted 1; you
+want prior stored value plus 1.</p>
+<h2 id="partial-update-only-when-value-changes">3. Partial Update (Only
+When Value Changes)</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> products(sku, name, price_cents)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>,$<span class="dv">2</span>,$<span class="dv">3</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (sku)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>DO <span class="kw">UPDATE</span> <span class="kw">SET</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    name <span class="op">=</span> EXCLUDED.name,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    price_cents <span class="op">=</span> EXCLUDED.price_cents,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    updated_at <span class="op">=</span> <span class="cf">CASE</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">WHEN</span> products.price_cents <span class="kw">IS</span> <span class="kw">DISTINCT</span> <span class="kw">FROM</span> EXCLUDED.price_cents</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>             <span class="kw">OR</span> products.name <span class="kw">IS</span> <span class="kw">DISTINCT</span> <span class="kw">FROM</span> EXCLUDED.name</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">THEN</span> now() <span class="cf">ELSE</span> products.updated_at <span class="cf">END</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span></code></pre></div>
+<p><code>IS DISTINCT FROM</code> treats NULLs sanely.</p>
+<h2 id="conditional-do-nothing">4. Conditional DO NOTHING</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> products(sku, name, price_cents)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>,$<span class="dv">2</span>,$<span class="dv">3</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (sku) DO <span class="kw">NOTHING</span>;</span></code></pre></div>
+<p>With fallback id lookup:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> ins <span class="kw">AS</span> (</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">INSERT</span> <span class="kw">INTO</span> products(sku, name, price_cents)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">VALUES</span> ($<span class="dv">1</span>,$<span class="dv">2</span>,$<span class="dv">3</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">ON</span> CONFLICT (sku) DO <span class="kw">NOTHING</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURNING</span> <span class="kw">id</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COALESCE</span>((<span class="kw">SELECT</span> <span class="kw">id</span> <span class="kw">FROM</span> ins), (<span class="kw">SELECT</span> <span class="kw">id</span> <span class="kw">FROM</span> products <span class="kw">WHERE</span> sku<span class="op">=</span>$<span class="dv">1</span>)) <span class="kw">AS</span> <span class="kw">id</span>;</span></code></pre></div>
+<h2 id="multi-column-unique-constraint">5. Multi-Column Unique
+Constraint</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> user_settings (</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    user_id bigint <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">key</span> text <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> jsonb <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    updated_at timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (user_id, <span class="kw">key</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> user_settings(user_id, <span class="kw">key</span>, <span class="fu">value</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>,$<span class="dv">2</span>,$<span class="dv">3</span>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (user_id, <span class="kw">key</span>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>DO <span class="kw">UPDATE</span> <span class="kw">SET</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">value</span> <span class="op">=</span> EXCLUDED.<span class="fu">value</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    updated_at <span class="op">=</span> now();</span></code></pre></div>
+<h2 id="upsert-with-derived-column-aggregate-field">6. Upsert With
+Derived Column (Aggregate Field)</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> tag_counts (</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    tag text <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    usages bigint <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span>,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    updated_at timestamptz <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now()</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> tag_counts(tag, usages)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">2</span>)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (tag)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>DO <span class="kw">UPDATE</span> <span class="kw">SET</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    usages <span class="op">=</span> tag_counts.usages <span class="op">+</span> EXCLUDED.usages,</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    updated_at <span class="op">=</span> now();</span></code></pre></div>
+<h2 id="upsert-avoiding-dead-updates-where-clause">7. Upsert Avoiding
+Dead Updates (WHERE Clause)</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> products(sku, name, price_cents)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>,$<span class="dv">2</span>,$<span class="dv">3</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (sku) DO <span class="kw">UPDATE</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> name <span class="op">=</span> EXCLUDED.name,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        price_cents <span class="op">=</span> EXCLUDED.price_cents,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        updated_at <span class="op">=</span> now()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> (products.name, products.price_cents) <span class="kw">IS</span> <span class="kw">DISTINCT</span> <span class="kw">FROM</span> (EXCLUDED.name, EXCLUDED.price_cents)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">RETURNING</span> <span class="op">*</span>;</span></code></pre></div>
+<p>If WHERE false → treated like DO NOTHING.</p>
+<h2 id="bulk-upsert-multiple-rows">8. Bulk Upsert (Multiple Rows)</h2>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> products(sku, name, price_cents)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    ($<span class="dv">1</span>,$<span class="dv">2</span>,$<span class="dv">3</span>),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    ($<span class="dv">4</span>,$<span class="dv">5</span>,$<span class="dv">6</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (sku) DO <span class="kw">UPDATE</span> <span class="kw">SET</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    name <span class="op">=</span> EXCLUDED.name,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    price_cents <span class="op">=</span> EXCLUDED.price_cents,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    updated_at <span class="op">=</span> now();</span></code></pre></div>
+<p>For very large batches consider staging table merge.</p>
+<h2 id="staging-table-merge-pattern">9. Staging Table Merge Pattern</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> products (sku, name, price_cents)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> sku, name, price_cents <span class="kw">FROM</span> staging_products</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (sku) DO <span class="kw">UPDATE</span> <span class="kw">SET</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    name <span class="op">=</span> EXCLUDED.name,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    price_cents <span class="op">=</span> EXCLUDED.price_cents,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    updated_at <span class="op">=</span> now();</span></code></pre></div>
+<h2 id="concurrency-behavior">10. Concurrency Behavior</h2>
+<ul>
+<li>Per-row lock on conflict.</li>
+<li>Last writer wins unless you encode alternative
+(e.g. <code>GREATEST</code>).</li>
+<li>Wrap multi-row logical operations in one statement when
+possible.</li>
+</ul>
+<h2 id="pitfalls-and-smells">11. Pitfalls and Smells</h2>
+<ul>
+<li>Updating static columns → toast churn.</li>
+<li>Missing unique index → ON CONFLICT unusable.</li>
+<li>Hot counter row contention → batch increments.</li>
+<li>Massive conflict ratio degrading throughput → stage &amp;
+merge.</li>
+</ul>
+<h2 id="testing-strategy">12. Testing Strategy</h2>
+<p>Cases: insert new, update changed, update identical (WHERE guard),
+concurrent updates.</p>
+<h2 id="choosing-a-pattern">13. Choosing a Pattern</h2>
+<table>
+<thead>
+<tr>
+<th>Need</th>
+<th>Pattern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simple create/replace</td>
+<td>Basic upsert</td>
+</tr>
+<tr>
+<td>Increment</td>
+<td>Counter increment</td>
+</tr>
+<tr>
+<td>Skip identical</td>
+<td>WHERE guard</td>
+</tr>
+<tr>
+<td>Massive batch</td>
+<td>Staging merge</td>
+</tr>
+<tr>
+<td>Accumulate numeric</td>
+<td>Derived aggregate</td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-upsert-vs-merge">Appendix: Upsert vs MERGE</h2>
+<p>MERGE for multi-branch logic; ON CONFLICT for simple replace. Measure
+both if in doubt.</p>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Use ON CONFLICT with a unique index to atomically insert or update.
+Guard updates to avoid unnecessary writes, and use staging merges for
+large batches. Test both “no change” and “conflict” paths.</p>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Add a WHERE guard to skip identical updates and verify updated_at
+only changes when fields change.</li>
+<li>Convert a per-row upsert loop into a staging table merge and compare
+performance.</li>
+<li>Implement a “keep max timestamp” upsert using GREATEST and confirm
+correctness under concurrency.</li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Simple Replace</strong>: DO UPDATE SET col = EXCLUDED.col.
+Key: ON CONFLICT (unique_cols). Guard: WHERE old IS DISTINCT FROM
+excluded. Note: row lock on conflict. Alternative: MERGE for
+multi-branch.</li>
+<li><strong>Insert or Ignore</strong>: DO NOTHING. Key: ON CONFLICT
+(unique_cols). Concurrency: no update contention. Alternative: fallback
+SELECT for id.</li>
+<li><strong>Increment Counter</strong>: count = count + 1. Key: ON
+CONFLICT (pk). Risk: hot row contention. Alternative: batch aggregate
+later.</li>
+<li><strong>Accumulate Value</strong>: usages = usages +
+EXCLUDED.usages. Key: ON CONFLICT (key). Guard: WHERE excluded.usages
+&gt; 0. Concurrency: serialized per key. Alternative: periodic SUM.</li>
+<li><strong>Partial Update When Changed</strong>: updated_at with CASE.
+Guard: WHERE (cols) IS DISTINCT FROM (EXCLUDED.cols). Benefit: avoid
+dead updates; locks only on real change.</li>
+<li><strong>Bulk Batch</strong>: Multi-VALUES. Guard: WHERE distinct to
+skip identical. Risk: high conflict ratio. Alternative: stage and
+merge.</li>
+<li><strong>Staging Merge</strong>: INSERT … SELECT FROM staging with ON
+CONFLICT DO UPDATE. Guard: WHERE distinct. Benefit: faster set-based.
+Alternative: MERGE for more logic.</li>
+<li><strong>Last-Write Wins</strong>: Basic replace. Guard: optional
+field compare. Risk: later arrival overwrites. Alternative: add version
+column.</li>
+<li><strong>Keep Max/Min</strong>: col = GREATEST(col, EXCLUDED.col).
+Guard: WHERE excluded.col &gt; col. Use for logical timestamp rules.
+Alternative: MERGE.</li>
+<li><strong>Skip Identical Rows</strong>: WHERE tuple IS DISTINCT FROM.
+Benefit: reduces WAL and bloat. Alternative: trigger compare.</li>
+<li><strong>Concurrency Sensitive</strong>: Optimistic version column.
+Key: ON CONFLICT (pk) WHERE version = EXCLUDED.version - 1. Behavior:
+missed updates error. Alternative: MERGE with matched condition.</li>
+</ul>
+<p>Principle: Match pattern to mutation semantics and guard against dead
+updates to reduce churn.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>INSERT ON CONFLICT (UPSERT):
+https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT</li>
+<li>MERGE command:
+https://www.postgresql.org/docs/current/sql-merge.html</li>
+<li>Indexes and conflict targets:
+https://www.postgresql.org/docs/current/sql-insert.html#SQL-ON-CONFLICT-EXAMPLES</li>
+</ul>
+</body>
+</html>

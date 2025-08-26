@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>12-sorting</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="sorting-patterns-keep-lists-friendly">Sorting Patterns (Keep
+Lists Friendly)</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>You’re building a product list page for an e‑commerce site. PM asks
+for: “Sort by popularity by default; if ratings tie, show cheaper first;
+within each category, let users see the top 3 items; pagination must be
+stable.” You need clear ordering rules, a deterministic tie‑breaker, and
+patterns for per‑group top‑N.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>ORDER BY is a priority list: the first column decides, the next is
+the tie‑breaker, and so on.</li>
+<li>Deterministic order needs a unique final tie‑breaker (often the
+primary key) so pagination doesn’t jitter.</li>
+<li>Use CASE for custom buckets (featured first), explicit NULLS
+FIRST/LAST for clarity, and window functions for “top N per group.”</li>
+</ul>
+<p>Sorting is just deciding the order humans read rows. A good ORDER BY
+answers: what ties come first? what happens inside groups? can I show
+“top N per group” cleanly? Here are core mini-patterns.</p>
+<h2 id="implementation-step-by-step-sql">Implementation (step by step
+SQL)</h2>
+<h2 id="setup">Setup</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> product (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> SERIAL <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  name TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">category</span> TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  price <span class="dt">NUMERIC</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  rating <span class="dt">INT</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> product (name, <span class="kw">category</span>, price, rating) <span class="kw">VALUES</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Laptop&#39;</span>,<span class="st">&#39;Electronics&#39;</span>,<span class="dv">1200</span>,<span class="dv">5</span>),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Smartphone&#39;</span>,<span class="st">&#39;Electronics&#39;</span>,<span class="dv">800</span>,<span class="dv">4</span>),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Book A&#39;</span>,<span class="st">&#39;Books&#39;</span>,<span class="dv">20</span>,<span class="dv">5</span>),</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Book B&#39;</span>,<span class="st">&#39;Books&#39;</span>,<span class="dv">15</span>,<span class="dv">4</span>),</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Headphones&#39;</span>,<span class="st">&#39;Electronics&#39;</span>,<span class="dv">100</span>,<span class="dv">3</span>);</span></code></pre></div>
+<p>Quick start: to load a richer dataset (including hierarchy and
+comments for Top‑N), run scripts/seed_sorting.sql in your database.</p>
+<h2 id="simple-multi-column">1. Simple multi-column</h2>
+<p>“If categories together, then cheaper first.”</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> product <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="kw">category</span>, price; <span class="co">-- default ASC</span></span></code></pre></div>
+<p>“If categories A→Z, inside each highest rating first.”</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> product <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="kw">category</span> <span class="kw">ASC</span>, rating <span class="kw">DESC</span>;</span></code></pre></div>
+<p>“If show most expensive first, but break price ties by name.”</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> product <span class="kw">ORDER</span> <span class="kw">BY</span> price <span class="kw">DESC</span>, name <span class="kw">ASC</span>;</span></code></pre></div>
+<p>Takeaway: ORDER BY is a priority list; earlier columns dominate
+tie‑breaking.</p>
+<h2 id="deterministic-ordering">2. Deterministic ordering</h2>
+<p>Production rule: every query that feeds pagination should end with a
+unique tie breaker (often primary key) so order can’t “jiggle.”</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> product <span class="kw">ORDER</span> <span class="kw">BY</span> price <span class="kw">DESC</span>, <span class="kw">id</span> <span class="kw">DESC</span>; <span class="co">-- stable</span></span></code></pre></div>
+<h2 id="custom-sort-buckets-case">3. Custom sort buckets (CASE)</h2>
+<p>Put “featured” first, rest alphabetical.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> product</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> (<span class="cf">CASE</span> <span class="cf">WHEN</span> rating <span class="op">=</span> <span class="dv">5</span> <span class="cf">THEN</span> <span class="dv">0</span> <span class="cf">ELSE</span> <span class="dv">1</span> <span class="cf">END</span>), name;</span></code></pre></div>
+<h2 id="null-handling">4. Null handling</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> product <span class="kw">ORDER</span> <span class="kw">BY</span> rating <span class="kw">DESC</span> <span class="kw">NULLS</span> <span class="fu">LAST</span>;</span></code></pre></div>
+<p>Explicit NULLS FIRST/LAST keeps surprises away.</p>
+<h2 id="hierarchy-ordering-depth-and-name">5. Hierarchy ordering (depth
+and name)</h2>
+<p>Adjacency list of categories:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">category</span> (</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> SERIAL <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  name TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  parent_id <span class="dt">INT</span> <span class="kw">REFERENCES</span> <span class="kw">category</span>(<span class="kw">id</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> <span class="kw">category</span> (name,parent_id) <span class="kw">VALUES</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Electronics&#39;</span>,<span class="kw">NULL</span>),</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Laptops&#39;</span>,<span class="dv">1</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Smartphones&#39;</span>,<span class="dv">1</span>),</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Books&#39;</span>,<span class="kw">NULL</span>),</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Fiction&#39;</span>,<span class="dv">4</span>),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Non-fiction&#39;</span>,<span class="dv">4</span>),</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a> (<span class="st">&#39;Fantasy&#39;</span>,<span class="dv">5</span>);</span></code></pre></div>
+<p>Build a tree with depth, then order: first top levels (smaller depth)
+then name.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> RECURSIVE tree <span class="kw">AS</span> (</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="kw">id</span>,name,parent_id,<span class="dv">1</span> <span class="kw">AS</span> <span class="fu">depth</span>, <span class="fu">LPAD</span>(<span class="kw">id</span>:<span class="ch">:text</span>,<span class="dv">5</span>,<span class="st">&#39;0&#39;</span>) <span class="kw">AS</span> path_key</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> <span class="kw">category</span> <span class="kw">WHERE</span> parent_id <span class="kw">IS</span> <span class="kw">NULL</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> c.<span class="kw">id</span>,c.name,c.parent_id,t.<span class="fu">depth</span><span class="op">+</span><span class="dv">1</span>, t.path_key<span class="op">||</span><span class="st">&#39;.&#39;</span><span class="op">||</span><span class="fu">LPAD</span>(c.<span class="kw">id</span>:<span class="ch">:text</span>,<span class="dv">5</span>,<span class="st">&#39;0&#39;</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> <span class="kw">category</span> c <span class="kw">JOIN</span> tree t <span class="kw">ON</span> c.parent_id<span class="op">=</span>t.<span class="kw">id</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> tree <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="fu">depth</span>, name;</span></code></pre></div>
+<p>For a strict “nested order” you can ORDER BY path_key instead.</p>
+<h2 id="top-n-per-group-window-function">6. Top N per group (window
+function)</h2>
+<p>“Show top 3 highest score replies per parent comment.”</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> <span class="kw">comment</span> (</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> SERIAL <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  parent_id <span class="dt">INT</span> <span class="kw">REFERENCES</span> <span class="kw">comment</span>(<span class="kw">id</span>),</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  content TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  created_at TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> now(),</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  score <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">DEFAULT</span> <span class="dv">0</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> <span class="kw">comment</span> (content, score) <span class="kw">VALUES</span> (<span class="st">&#39;First&#39;</span>,<span class="dv">10</span>), (<span class="st">&#39;Second&#39;</span>,<span class="dv">5</span>);</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> <span class="kw">comment</span> (parent_id, content, score) <span class="kw">VALUES</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a> (<span class="dv">1</span>,<span class="st">&#39;R1&#39;</span>,<span class="dv">7</span>),(<span class="dv">1</span>,<span class="st">&#39;R2&#39;</span>,<span class="dv">9</span>),(<span class="dv">1</span>,<span class="st">&#39;R3&#39;</span>,<span class="dv">3</span>),(<span class="dv">1</span>,<span class="st">&#39;R4&#39;</span>,<span class="dv">8</span>),</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a> (<span class="dv">2</span>,<span class="st">&#39;R1&#39;</span>,<span class="dv">2</span>),(<span class="dv">2</span>,<span class="st">&#39;R2&#39;</span>,<span class="dv">6</span>);</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> (</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="op">*</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>         <span class="fu">ROW_NUMBER</span>() <span class="kw">OVER</span> (<span class="kw">PARTITION</span> <span class="kw">BY</span> parent_id <span class="kw">ORDER</span> <span class="kw">BY</span> score <span class="kw">DESC</span>, <span class="kw">id</span>) <span class="kw">AS</span> rn</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> <span class="kw">comment</span> <span class="kw">WHERE</span> parent_id <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>) x</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> rn <span class="op">&lt;=</span> <span class="dv">3</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> parent_id, score <span class="kw">DESC</span>;</span></code></pre></div>
+<p>ROW_NUMBER ranks inside each parent group; then we filter.</p>
+<p>Swap ROW_NUMBER for RANK or DENSE_RANK if you want ties to behave
+differently.</p>
+<h2 id="keyset-pagination-prep">7. Keyset pagination prep</h2>
+<p>Stable deterministic sort is required before you can switch from
+OFFSET/LIMIT to keyset (cursor) pagination.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> product <span class="kw">ORDER</span> <span class="kw">BY</span> price <span class="kw">DESC</span>, <span class="kw">id</span> <span class="kw">DESC</span> <span class="kw">LIMIT</span> <span class="dv">20</span>; <span class="co">-- later WHERE (price,id) &lt; (?,?)</span></span></code></pre></div>
+<h2 id="performance-hints">8. Performance hints</h2>
+<ul>
+<li>Add matching index columns in the same leading order as your most
+selective + ordering pattern.</li>
+<li>Avoid random functions (like ORDER BY random()) for large
+tables—precompute or sample.</li>
+<li>For window top‑N, an index on (parent_id, score DESC) can help the
+planner prune.</li>
+</ul>
+<h2 id="checklist">9. Checklist</h2>
+<ul>
+<li>Defined exact tie breaker? (unique)</li>
+<li>Null order intentional? (NULLS LAST?)</li>
+<li>Need buckets? (CASE)</li>
+<li>Need per‑group top N? (window + filter)</li>
+<li>Pagination planned? (stable order)</li>
+</ul>
+<p>Clear ordering = calm UIs and predictable caches.</p>
+<h2 id="user-defined-ordering-with-ordinality">10. User-defined ordering
+(WITH ORDINALITY)</h2>
+<p>Let users supply an explicit order (IDs or labels) and apply it in
+SQL using WITH ORDINALITY.</p>
+<p>Example: sort products by a user-picked list of IDs</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Desired order: [3, 5, 2]</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> p.<span class="op">*</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> product p</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">JOIN</span> unnest(<span class="dt">ARRAY</span>[<span class="dv">3</span>,<span class="dv">5</span>,<span class="dv">2</span>]) <span class="kw">WITH</span> ORDINALITY <span class="kw">AS</span> u(<span class="kw">id</span>, ord)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> u.<span class="kw">id</span> <span class="op">=</span> p.<span class="kw">id</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> u.ord, p.<span class="kw">id</span>; <span class="co">-- deterministic tie-breaker</span></span></code></pre></div>
+<p>Example: category preference order, then inside category by rating
+DESC, id DESC</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Desired category order: [&#39;Books&#39;,&#39;Electronics&#39;,&#39;Home&#39;]</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> p.<span class="op">*</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> product p</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="kw">LEFT</span> <span class="kw">JOIN</span> unnest(<span class="dt">ARRAY</span>[<span class="st">&#39;Books&#39;</span>,<span class="st">&#39;Electronics&#39;</span>,<span class="st">&#39;Home&#39;</span>]) <span class="kw">WITH</span> ORDINALITY <span class="kw">AS</span> u(<span class="kw">category</span>, ord)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ON</span> u.<span class="kw">category</span> <span class="op">=</span> p.<span class="kw">category</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> <span class="fu">COALESCE</span>(u.ord, <span class="dv">2147483647</span>),  <span class="co">-- unmatched last</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>         p.rating <span class="kw">DESC</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>         p.<span class="kw">id</span> <span class="kw">DESC</span>;                    <span class="co">-- unique tie-breaker</span></span></code></pre></div>
+<p>Notes</p>
+<ul>
+<li>WITH ORDINALITY assigns a 1-based position to each element; join on
+the value and ORDER BY the position.</li>
+<li>Use LEFT JOIN if some rows may not appear in the user list; send
+unmatched to the end via COALESCE.</li>
+<li>Always add a unique final tie-breaker (e.g., id) to keep pagination
+stable.</li>
+<li>For dynamic inputs from the app, bind an array parameter and cast
+(e.g., $1::int[], $1::text[]).</li>
+<li>VALUES(…),(…) works too; WITH ORDINALITY is concise for arrays.</li>
+</ul>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>Bucketed sorts with CASE are flexible but can reduce index
+usefulness; consider generated columns to index buckets.</li>
+<li>Window choices: ROW_NUMBER (no ties), RANK/DENSE_RANK (ties kept) —
+pick based on UX.</li>
+<li>Locale/collation affects text ordering; ICU collations may be slower
+but user‑friendly.</li>
+<li>Keyset (cursor) pagination is faster and stable than OFFSET/LIMIT,
+but needs careful tuple comparisons.</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>Missing unique tie‑breaker leads to duplicate/missing rows across
+pages.</li>
+<li>Forgetting NULLS FIRST/LAST makes results vary by planner
+defaults.</li>
+<li>ORDER BY random() on large tables is expensive; preselect candidates
+instead.</li>
+<li>Mixed ASC/DESC without matching WHERE operators breaks keyset
+pagination.</li>
+</ul>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Define a strict, deterministic ORDER BY with explicit NULL handling
+and a unique final tie‑breaker. Use CASE for buckets and window
+functions for per‑group top‑N. Prefer keyset pagination once the order
+is stable.</p>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Add a “featured first, then by rating DESC, price ASC, id DESC”
+order to the sample products and verify stability across pages.</li>
+<li>Implement “top 2 per category” using ROW_NUMBER and compare with
+DENSE_RANK.</li>
+<li>Try a locale‑aware collation on product names and observe sort
+differences.</li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Multi-Column Priority</strong>: ORDER BY a, b DESC, c to
+define tie-breaking sequence. Pitfall: missing unique tie-breaker for
+pagination.</li>
+<li><strong>Deterministic Pagination</strong>: Final ORDER BY includes
+PK to keep pages stable. Pitfall: jitter if PK omitted.</li>
+<li><strong>Custom Bucket Ordering</strong>: Use CASE WHEN … THEN … END
+for feature/bucket order. Pitfall: complex CASE can hurt index use.</li>
+<li><strong>Null Handling</strong>: Use NULLS FIRST or NULLS LAST
+explicitly to avoid surprises.</li>
+<li><strong>Hierarchy Ordering</strong>: Recursive CTE + depth/path for
+tree order. Pitfall: deep trees expensive without indexes.</li>
+<li><strong>Top N per Group</strong>: Use ROW_NUMBER() OVER (PARTITION
+BY …) then filter. Pitfall: DISTINCT ON without deterministic
+order.</li>
+<li><strong>Keyset Prep</strong>: ORDER BY business cols + unique id to
+prepare for cursor pagination. Pitfall: non-unique ordering leads to
+duplicates.</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>ORDER BY and NULLS FIRST/LAST:
+https://www.postgresql.org/docs/current/queries-order.html</li>
+<li>Collation support:
+https://www.postgresql.org/docs/current/collation.html</li>
+<li>WITH ORDINALITY and table functions:
+https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-TABLEFUNCTIONS</li>
+</ul>
+</body>
+</html>

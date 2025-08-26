@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>14-indexes</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="indexes-make-lookups-fast">Indexes (Make Lookups Fast)</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>You own the reporting endpoint for a marketplace. Pages that list
+recent orders started timing out after traffic grew. EXPLAIN shows
+sequential scans over millions of rows. You need a way to jump to the
+right rows fast. PostgreSQL indexes act like a lookup map so the planner
+can avoid scanning the whole table and return results quickly.</p>
+<h2 id="core-concept">Core Concept</h2>
+<p>An index is a fast lookup structure beside your table. Instead of
+scanning every row, PostgreSQL can jump to the rows you need. Indexes
+speed reads but add work on writes. Add indexes that have a clear,
+measured benefit.</p>
+<p>We’ll cover: how to see if an index is used, core index types, simple
+rules, and special cases (GIN, GiST, BRIN, full text).</p>
+<h2 id="implementation">Implementation</h2>
+<h3 id="check-if-an-index-is-used">1. Check if an index is used</h3>
+<p>Use the planner and statistics instead of guessing. Explain the query
+plan (planner intention):</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">EXPLAIN</span> <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> logs <span class="kw">WHERE</span> created_at <span class="op">&gt;</span> now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;1 day&#39;</span>;</span></code></pre></div>
+<p>If you see <code>Index Scan using idx_logs_brin</code> (or similar),
+the planner wants that index.</p>
+<p>Run it for real:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">EXPLAIN</span> <span class="kw">ANALYZE</span> <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> logs <span class="kw">WHERE</span> created_at <span class="op">&gt;</span> now() <span class="op">-</span> <span class="dt">interval</span> <span class="st">&#39;1 day&#39;</span>;</span></code></pre></div>
+<p>This shows actual timing and row counts.</p>
+<p>Check usage counts since the last stats reset:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> relname   <span class="kw">AS</span> <span class="kw">table</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>       indexrelname <span class="kw">AS</span> <span class="kw">index</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>       idx_scan  <span class="kw">AS</span> times_used</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> pg_stat_user_indexes</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> idx_scan <span class="kw">DESC</span> <span class="kw">NULLS</span> <span class="fu">LAST</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">20</span>;</span></code></pre></div>
+<p>A low or zero <code>idx_scan</code> over a long period suggests an
+index might be unused. Verify with workload knowledge before
+dropping.</p>
+<p>Filter by name or pattern when checking a specific index:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> relname <span class="kw">AS</span> <span class="kw">table</span>, indexrelname <span class="kw">AS</span> <span class="kw">index</span>, idx_scan</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> pg_stat_user_indexes</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> indexrelname <span class="kw">LIKE</span> <span class="st">&#39;%brin%&#39;</span>;</span></code></pre></div>
+<p>Tip: if an index is not used, confirm your query matches the index
+columns and operators. Update planner stats if they are stale:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>VACUUM (<span class="kw">ANALYZE</span>) your_table;</span></code></pre></div>
+<h3 id="core-b-tree-patterns">2. Core B-tree patterns</h3>
+<p>B-tree is the default. It covers equality and range operators for
+most scalar types. Equality on a column:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_users_email <span class="kw">ON</span> users(email);</span></code></pre></div>
+<p>Filter and order on (user_id, created_at):</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_orders_user_created_at <span class="kw">ON</span> orders(user_id, created_at);</span></code></pre></div>
+<p>Case-insensitive lookup:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_users_email_lower <span class="kw">ON</span> users (<span class="fu">LOWER</span>(email));</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Query must use same expression</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> users <span class="kw">WHERE</span> <span class="fu">LOWER</span>(email) <span class="op">=</span> <span class="fu">LOWER</span>(<span class="st">&#39;someone@example.com&#39;</span>);</span></code></pre></div>
+<p>Unique constraint as index:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> uidx_users_email <span class="kw">ON</span> users(email);</span></code></pre></div>
+<p>Note: deferrable uniqueness is a table constraint feature. See the
+Constraints chapter for deferrable UNIQUE and transaction control.
+Partial index (only active rows need speed or uniqueness):</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">UNIQUE</span> <span class="kw">INDEX</span> uidx_users_active_email <span class="kw">ON</span> users(email) <span class="kw">WHERE</span> is_active;</span></code></pre></div>
+<p>Covering index (include payload columns for index-only scans):</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_orders_user_created_cover <span class="kw">ON</span> orders(user_id, created_at) INCLUDE (total);</span></code></pre></div>
+<p>Leftmost-prefix rule: a multi-column B-tree helps queries that use
+the leftmost columns. Put the most selective filter first.</p>
+<p>Match ORDER BY direction when it matters:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_orders_created_desc <span class="kw">ON</span> orders (created_at <span class="kw">DESC</span>);</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Helps ORDER BY created_at DESC LIMIT 50</span></span></code></pre></div>
+<h3 id="special-index-types-choose-on-purpose">3. Special index types
+(choose on purpose)</h3>
+<p>GIN (arrays, JSONB containment, full text):</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_articles_tags_gin <span class="kw">ON</span> articles <span class="kw">USING</span> gin (tags);</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- Array queries</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> articles <span class="kw">WHERE</span> tags @<span class="op">&gt;</span> <span class="dt">ARRAY</span>[<span class="st">&#39;postgres&#39;</span>];</span></code></pre></div>
+<p>JSONB containment (key/value):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Index the whole JSONB for containment operators</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_events_data_gin <span class="kw">ON</span> <span class="kw">events</span> <span class="kw">USING</span> gin (<span class="kw">data</span>);</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- Query: rows with country = &#39;US&#39;</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="kw">events</span> <span class="kw">WHERE</span> <span class="kw">data</span> @<span class="op">&gt;</span> <span class="st">&#39;{&quot;country&quot;:&quot;US&quot;}&#39;</span>:<span class="ch">:jsonb</span>;</span></code></pre></div>
+<p>Full text tsvector:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_articles_fts <span class="kw">ON</span> articles <span class="kw">USING</span> gin (to_tsvector(<span class="st">&#39;english&#39;</span>, title <span class="op">||</span> <span class="st">&#39; &#39;</span> <span class="op">||</span> <span class="kw">body</span>));</span></code></pre></div>
+<p>Equality on a single JSONB key? Prefer a B-tree functional index:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_events_country <span class="kw">ON</span> <span class="kw">events</span> ((<span class="kw">data</span><span class="op">-&gt;&gt;</span><span class="st">&#39;country&#39;</span>));</span></code></pre></div>
+<p>LIKE or ILIKE on large text? Consider pg_trgm with GIN:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> EXTENSION <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> pg_trgm;</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_title_trgm <span class="kw">ON</span> articles <span class="kw">USING</span> gin (title gin_trgm_ops);</span></code></pre></div>
+<p>GiST (ranges, geometry, KNN, exclusion):</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_booking_period_gist <span class="kw">ON</span> room_booking <span class="kw">USING</span> gist (period);</span></code></pre></div>
+<p>Needed for range overlap operators like <code>&amp;&amp;</code> with
+speed.</p>
+<p>BRIN (huge append-only tables):</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> idx_logs_created_brin <span class="kw">ON</span> logs <span class="kw">USING</span> brin (created_at);</span></code></pre></div>
+<p>Tiny and fast to create; best when the column is naturally ordered.
+Summarize new pages for big loads:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> brin_summarize_new_values(<span class="st">&#39;idx_logs_created_brin&#39;</span>);</span></code></pre></div>
+<p>Hash (equality only): niche; B-tree is usually fine.</p>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li><strong>Expression vs stored value</strong>: sometimes a generated
+column plus B-tree helps SELECT payloads; otherwise a functional index
+is enough.</li>
+<li><strong>Partial vs full indexes</strong>: partial reduce size and
+write cost but only help matching predicates.</li>
+<li><strong>Concurrent builds</strong>: CREATE INDEX CONCURRENTLY avoids
+long locks but is slower to build.</li>
+<li><strong>Covering vs narrow</strong>: INCLUDE speeds index-only scans
+at the cost of size and write overhead.</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>Over-indexing slows writes and consumes disk. Each index must earn
+its keep.</li>
+<li>Mismatch between query and index expression prevents use (for
+example, missing LOWER()).</li>
+<li>Stale statistics mislead the planner. Run ANALYZE or rely on
+autovacuum.</li>
+<li>CREATE/DROP INDEX CONCURRENTLY cannot run inside a transaction
+block.</li>
+</ul>
+<h2 id="recap">Recap</h2>
+<ul>
+<li>Indexes trade write cost for read speed. Start with B-tree and add
+others on purpose.</li>
+<li>Verify usefulness with EXPLAIN, ANALYZE, and
+pg_stat_user_indexes.</li>
+<li>Use expression, partial, covering, and special types (GIN, GiST,
+BRIN) for specific needs.</li>
+<li>Build and drop concurrently in live systems; watch for bloat and
+rebuild if needed.</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Indexes overview:
+https://www.postgresql.org/docs/current/indexes.html</li>
+<li>B-tree, Hash, GiST, SP-GiST, GIN, BRIN:
+https://www.postgresql.org/docs/current/indexes-types.html</li>
+<li>Covering indexes (INCLUDE):
+https://www.postgresql.org/docs/current/indexes-index-only-scans.html#INDEXES-ONLY-SCANS-COVERING</li>
+<li>Partial indexes:
+https://www.postgresql.org/docs/current/indexes-partial.html</li>
+<li>Index maintenance and VACUUM:
+https://www.postgresql.org/docs/current/routine-vacuuming.html</li>
+</ul>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Add a functional index on LOWER(email) and compare EXPLAIN plans
+with/without it.</li>
+<li>Create a partial unique index on users(email) WHERE is_active and
+test toggling is_active.</li>
+<li>Build a BRIN on a large timestamped table; run
+brin_summarize_new_values and check plan changes.</li>
+<li>Add a GIN index on jsonb data and test containment queries.</li>
+</ul>
+</body>
+</html>

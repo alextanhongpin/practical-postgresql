@@ -1,0 +1,66 @@
+/* Simple CSS for Markdown HTML output */
+body {
+  font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  background: #f9f9f9;
+  color: #222;
+  margin: 2em auto;
+  max-width: 800px;
+  padding: 2em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+  color: #2a5d9f;
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+}
+p {
+  line-height: 1.7;
+  margin: 1em 0;
+}
+ul, ol {
+  margin: 1em 0 1em 2em;
+}
+pre, code {
+  background: #f4f4f4;
+  border-radius: 4px;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+  padding: 1em;
+  overflow-x: auto;
+}
+code {
+  padding: 0.2em 0.4em;
+  font-size: 1em;
+}
+a {
+  color: #2a5d9f;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+table {
+  border-collapse: collapse;
+  margin: 2em 0;
+  width: 100%;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 0.5em 1em;
+}
+th {
+  background: #f0f4fa;
+}
+blockquote {
+  border-left: 4px solid #2a5d9f;
+  background: #f4f8fc;
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  color: #555;
+}
+img {
+  max-width: 100%;
+  display: block;
+  margin: 1em auto;
+}

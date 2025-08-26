@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>11-slowly-changing-dimensions</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="slowly-changing-dimensions-type-2-history-made-simple">Slowly
+Changing Dimensions (Type 2 History Made Simple)</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>Analytics asks, “What did we believe about this customer on June 1?”
+Your current table only keeps the latest address, so answers drift over
+time. You need to keep each historical version with a validity window
+for accurate as‑of queries.</p>
+<h2 id="core-concept">Core Concept</h2>
+<p>Store one row per version with <code>[valid_from, valid_to)</code>
+where <code>valid_to</code> is NULL for the current version. Update the
+previous open row’s <code>valid_to</code> on change and INSERT a new row
+starting at the change time.</p>
+<h2 id="implementation-step-by-step-sql">Implementation (step by step
+SQL)</h2>
+<h3 id="table">Table</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> customer_dim (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  customer_id <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  name        TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  address     TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  valid_from  TIMESTAMPTZ <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  valid_to    TIMESTAMPTZ,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">PRIMARY</span> <span class="kw">KEY</span> (customer_id, valid_from)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<h3 id="insert-first-version">Insert first version</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> customer_dim (customer_id, name, address, valid_from)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> (<span class="dv">1</span>,<span class="st">&#39;Alice&#39;</span>,<span class="st">&#39;123 Main St&#39;</span>,<span class="st">&#39;2025-01-01&#39;</span>);</span></code></pre></div>
+<h3 id="apply-change-close-old-row-add-new">Apply change (close old row,
+add new)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> customer_dim</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SET</span> valid_to <span class="op">=</span> <span class="st">&#39;2025-07-01&#39;</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> customer_id<span class="op">=</span><span class="dv">1</span> <span class="kw">AND</span> valid_to <span class="kw">IS</span> <span class="kw">NULL</span>;</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> customer_dim (customer_id, name, address, valid_from)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> (<span class="dv">1</span>,<span class="st">&#39;Alice&#39;</span>,<span class="st">&#39;456 Oak Ave&#39;</span>,<span class="st">&#39;2025-07-01&#39;</span>);</span></code></pre></div>
+<h3 id="current-snapshot">Current snapshot</h3>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> customer_dim <span class="kw">WHERE</span> customer_id<span class="op">=</span><span class="dv">1</span> <span class="kw">AND</span> valid_to <span class="kw">IS</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<h3 id="as-of-a-date">As of a date</h3>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> customer_dim</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> customer_id<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">AND</span> <span class="st">&#39;2025-06-01&#39;</span> <span class="op">&gt;=</span> valid_from</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">AND</span> (<span class="st">&#39;2025-06-01&#39;</span> <span class="op">&lt;</span> valid_to <span class="kw">OR</span> valid_to <span class="kw">IS</span> <span class="kw">NULL</span>);</span></code></pre></div>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>Always close the previous open row before inserting a new one.</li>
+<li>Consider a trigger or stored procedure to handle the close + insert
+atomically.</li>
+<li>Add an index on (customer_id, valid_to) if lookups are heavy.</li>
+<li>Use half‑open semantics: treat valid_to as the instant the version
+stops being true.</li>
+</ul>
+<h3 id="optional-helpers">Optional helpers</h3>
+<p>View for current:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">VIEW</span> customer_current <span class="kw">AS</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> customer_dim <span class="kw">WHERE</span> valid_to <span class="kw">IS</span> <span class="kw">NULL</span>;</span></code></pre></div>
+<h3 id="trigger-enforce-continuous-valid-intervals-tstzrange-range_agg">Trigger:
+enforce continuous, valid intervals (tstzrange + range_agg)</h3>
+<p>Use a simple trigger to check three things per
+<code>customer_id</code> when inserting/updating a version row:</p>
+<ul>
+<li>Each row has a valid half-open window:
+<code>valid_from &lt; valid_to</code> (or <code>valid_to IS NULL</code>
+for the current open version)</li>
+<li>No overlaps between versions for the same customer</li>
+<li>Continuity: consecutive windows are exactly adjacent (previous
+<code>valid_to</code> equals next <code>valid_from</code>) so there are
+no gaps</li>
+</ul>
+<p>This uses <code>tstzrange</code> to build ranges and
+<code>range_agg</code> to get a normalized multirange we can scan for
+gaps.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> customer_dim_enforce_continuity()</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>RETURNS <span class="kw">trigger</span> LANGUAGE plpgsql <span class="kw">AS</span> $$</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  mr tstzmultirange;</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  gaps <span class="dt">int</span>;</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  _cid <span class="dt">int</span> <span class="op">:=</span> <span class="kw">NEW</span>.customer_id;</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  _new_range tstzrange <span class="op">:=</span> tstzrange(<span class="kw">NEW</span>.valid_from, <span class="kw">NEW</span>.valid_to, <span class="st">&#39;[)&#39;</span>);</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 1) Per-row validity</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> <span class="kw">NEW</span>.valid_to <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> <span class="kw">NEW</span>.valid_from <span class="op">&gt;=</span> <span class="kw">NEW</span>.valid_to <span class="cf">THEN</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    RAISE <span class="kw">EXCEPTION</span> <span class="kw">USING</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>      MESSAGE <span class="op">=</span> <span class="st">&#39;[SCD_0001] invalid validity window&#39;</span>,</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>      DETAIL  <span class="op">=</span> json_build_object(<span class="st">&#39;customer_id&#39;</span>, _cid, <span class="st">&#39;valid_from&#39;</span>, <span class="kw">NEW</span>.valid_from, <span class="st">&#39;valid_to&#39;</span>, <span class="kw">NEW</span>.valid_to):<span class="ch">:text</span>,</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>      HINT    <span class="op">=</span> <span class="st">&#39;Use half-open [valid_from, valid_to) with valid_from &lt; valid_to&#39;</span>;</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 2) Explicit overlap check against existing rows (allow adjacency only)</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> <span class="kw">EXISTS</span> (</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="dv">1</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> customer_dim d</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> d.customer_id <span class="op">=</span> _cid</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>      <span class="kw">AND</span> (TG_OP <span class="op">=</span> <span class="st">&#39;INSERT&#39;</span> <span class="kw">OR</span> (d.valid_from, d.valid_to) <span class="kw">IS</span> <span class="kw">DISTINCT</span> <span class="kw">FROM</span> (<span class="kw">OLD</span>.valid_from, <span class="kw">OLD</span>.valid_to))</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>      <span class="kw">AND</span> tstzrange(d.valid_from, d.valid_to, <span class="st">&#39;[)&#39;</span>) &amp;&amp; _new_range</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>      <span class="kw">AND</span> <span class="kw">NOT</span> <span class="fu">upper</span>(tstzrange(d.valid_from, d.valid_to, <span class="st">&#39;[)&#39;</span>)) <span class="op">=</span> <span class="fu">lower</span>(_new_range)</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>      <span class="kw">AND</span> <span class="kw">NOT</span> <span class="fu">upper</span>(_new_range) <span class="op">=</span> <span class="fu">lower</span>(tstzrange(d.valid_from, d.valid_to, <span class="st">&#39;[)&#39;</span>))</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="cf">THEN</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    RAISE <span class="kw">EXCEPTION</span> <span class="kw">USING</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>      MESSAGE <span class="op">=</span> <span class="st">&#39;[SCD_0002] overlapping versions for customer&#39;</span>,</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>      DETAIL  <span class="op">=</span> json_build_object(<span class="st">&#39;customer_id&#39;</span>, _cid):<span class="ch">:text</span>,</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>      HINT    <span class="op">=</span> <span class="st">&#39;Close previous row at valid_to = new.valid_from, then insert the new version&#39;</span>;</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- 3) Continuity check (no gaps): aggregate all ranges (including NEW) and</span></span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- ensure every next range starts exactly at the previous end</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> range_agg(r <span class="kw">ORDER</span> <span class="kw">BY</span> <span class="fu">lower</span>(r))</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  <span class="kw">INTO</span> mr</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> (</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> tstzrange(valid_from, valid_to, <span class="st">&#39;[)&#39;</span>) <span class="kw">AS</span> r</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> customer_dim</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    <span class="kw">WHERE</span> customer_id <span class="op">=</span> _cid</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">UNION</span> <span class="kw">ALL</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> _new_range</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  ) q;</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Count places where next.lower &lt;&gt; prev.upper</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="fu">count</span>(<span class="op">*</span>) <span class="kw">INTO</span> gaps</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FROM</span> (</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">SELECT</span> <span class="fu">upper</span>(r) <span class="kw">AS</span> prev_end,</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>           <span class="fu">lead</span>(<span class="fu">lower</span>(r)) <span class="kw">OVER</span> (<span class="kw">ORDER</span> <span class="kw">BY</span> <span class="fu">lower</span>(r)) <span class="kw">AS</span> next_start</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FROM</span> unnest(mr) <span class="kw">AS</span> r</span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>  ) s</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  <span class="kw">WHERE</span> next_start <span class="kw">IS</span> <span class="kw">NOT</span> <span class="kw">NULL</span> <span class="kw">AND</span> next_start <span class="op">&lt;&gt;</span> prev_end;</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> gaps <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">THEN</span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>    RAISE <span class="kw">EXCEPTION</span> <span class="kw">USING</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>      MESSAGE <span class="op">=</span> <span class="st">&#39;[SCD_0003] non-contiguous history for customer&#39;</span>,</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>      DETAIL  <span class="op">=</span> json_build_object(<span class="st">&#39;customer_id&#39;</span>, _cid, <span class="st">&#39;gaps&#39;</span>, gaps):<span class="ch">:text</span>,</span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>      HINT    <span class="op">=</span> <span class="st">&#39;Ensure each version starts at the previous valid_to (half-open [) semantics)&#39;</span>;</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>  <span class="kw">RETURN</span> <span class="kw">NEW</span>;</span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>$$;</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a><span class="kw">DROP</span> <span class="kw">TRIGGER</span> <span class="cf">IF</span> <span class="kw">EXISTS</span> trg_customer_dim_enforce <span class="kw">ON</span> customer_dim;</span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TRIGGER</span> trg_customer_dim_enforce</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>  <span class="kw">BEFORE</span> <span class="kw">INSERT</span> <span class="kw">OR</span> <span class="kw">UPDATE</span> <span class="kw">ON</span> customer_dim</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>  <span class="cf">FOR</span> <span class="kw">EACH</span> <span class="kw">ROW</span></span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>  <span class="kw">EXECUTE</span> <span class="kw">FUNCTION</span> customer_dim_enforce_continuity();</span></code></pre></div>
+<p>Notes</p>
+<ul>
+<li>This trigger enforces local continuity per <code>customer_id</code>.
+If you insert historical backfills out of order, wrap them in a
+transaction; the trigger runs per-row. For bulk loads, a staging table
+plus a set-based validation query can be faster.</li>
+<li>Overlap prevention can also be done with an exclusion constraint:
+<code>EXCLUDE USING gist (customer_id WITH =, tstzrange(valid_from, valid_to, &#39;[)&#39;) WITH &amp;&amp;)</code>;
+the trigger here adds the “no gaps” guarantee as well.</li>
+<li><code>[)</code> half‑open semantics treat adjacency (prev
+<code>valid_to</code> equals next <code>valid_from</code>) as
+continuous.</li>
+</ul>
+<h3 id="write-helpers-close-and-insert-cte-and-merge">Write helpers:
+close-and-insert (CTE and MERGE)</h3>
+<p>Close the current open row and insert the new version atomically
+using a CTE:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> <span class="kw">close</span> <span class="kw">AS</span> (</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UPDATE</span> customer_dim</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>     <span class="kw">SET</span> valid_to <span class="op">=</span> $<span class="dv">1</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>   <span class="kw">WHERE</span> customer_id <span class="op">=</span> $<span class="dv">2</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>     <span class="kw">AND</span> valid_to <span class="kw">IS</span> <span class="kw">NULL</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> customer_dim (customer_id, name, address, valid_from, valid_to)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">2</span>, $<span class="dv">3</span>, $<span class="dv">4</span>, $<span class="dv">1</span>, <span class="kw">NULL</span>);</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">-- Bind $1=new_valid_from, $2=customer_id, $3=name, $4=address</span></span></code></pre></div>
+<p>Alternative with MERGE (PostgreSQL 15+): use MERGE to close the open
+row, then INSERT. MERGE cannot both update and insert for the same
+source row in one statement.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co">-- Close the open row if any</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">MERGE</span> <span class="kw">INTO</span> customer_dim t</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">USING</span> (<span class="kw">VALUES</span> ($<span class="dv">1</span>:<span class="ch">:int</span>, $<span class="dv">2</span>:<span class="ch">:timestamptz</span>)) s(customer_id, new_from)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> (t.customer_id <span class="op">=</span> s.customer_id <span class="kw">AND</span> t.valid_to <span class="kw">IS</span> <span class="kw">NULL</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">WHEN</span> MATCHED <span class="cf">THEN</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UPDATE</span> <span class="kw">SET</span> valid_to <span class="op">=</span> s.new_from;</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">-- Then insert the new current version</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> customer_dim (customer_id, name, address, valid_from, valid_to)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">VALUES</span> ($<span class="dv">1</span>, $<span class="dv">3</span>, $<span class="dv">4</span>, $<span class="dv">2</span>, <span class="kw">NULL</span>);</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co">-- Bind $1=customer_id, $2=new_valid_from, $3=name, $4=address</span></span></code></pre></div>
+<p>Notes</p>
+<ul>
+<li>Include a “no-op” guard if you want to skip inserts when values
+didn’t change, by comparing against the latest version.</li>
+<li>MERGE simplifies the “close” step but still needs a separate INSERT
+for Type 2.</li>
+</ul>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Type 2 lets you reconstruct past truth and audit changes cleanly.
+Each new version is an append; nothing destructive to history.</p>
+<h2 id="limits-of-explicit-valid_from-and-valid_to">Limits of explicit
+valid_from and valid_to</h2>
+<ul>
+<li><strong>Two-Step Write</strong>: You must UPDATE the old row then
+INSERT the new; slightly more latency; wrap both in one transaction to
+avoid races.</li>
+<li><strong>Gaps</strong>: If valid_to doesn’t match the next version’s
+start, as-of queries can return no row; enforce by procedure or
+scheduled checks.</li>
+<li><strong>Overlaps</strong>: Wrong valid_from/valid_to causes
+ambiguous truth; use an exclusion constraint on tstzrange or a trigger
+check.</li>
+<li><strong>Retro Corrections</strong>: Back-dated changes mean
+splitting an old interval; provide a helper to “surgery” intervals
+safely.</li>
+<li><strong>Clock Skew</strong>: If app servers aren’t time-synced,
+version order can be wrong; use server-side NOW().</li>
+<li><strong>Write Amplification</strong>: Updating valid_to writes the
+row twice; on frequent changes consider an append-only snapshot
+(below).</li>
+</ul>
+<p>When change frequency is modest these are acceptable; if changes are
+very frequent, consider an append-only snapshot table and derive ranges
+at query time.</p>
+<h2 id="alternate-snapshot-approach-append-only">Alternate: snapshot
+approach (append-only)</h2>
+<p>Prefer a minimal-write log and derive intervals on read? See the
+dedicated follow-up chapter:</p>
+<ul>
+<li><a href="11a-slow-changing-dimensions.md">Slow‑changing dimensions
+(Snapshot approach)</a></li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Purpose</strong>: Preserve historical versions for as-of
+queries.</li>
+<li><strong>Row Shape</strong>: (business key, attributes…, valid_from,
+valid_to NULL for current).</li>
+<li><strong>Write Flow</strong>: Close the open row (set valid_to) then
+insert a new version.</li>
+<li><strong>Query Current</strong>: WHERE valid_to IS NULL.</li>
+<li><strong>As-Of Query</strong>: date &gt;= valid_from AND (date &lt;
+valid_to OR valid_to IS NULL).</li>
+<li><strong>Integrity</strong>: Use a trigger or procedure to enforce a
+single open row per key.</li>
+<li><strong>Indexing</strong>: (business_key, valid_to) or
+(business_key, valid_from DESC).</li>
+<li><strong>Pitfalls</strong>: Missing close, overlapping windows, clock
+skew.</li>
+<li><strong>Extensions</strong>: Add changed-columns diffs, a history
+view, or temporal partitioning.</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Window functions:
+https://www.postgresql.org/docs/current/tutorial-window.html</li>
+<li>Temporal data and range queries:
+https://www.postgresql.org/docs/current/rangetypes.html</li>
+</ul>
+</body>
+</html>

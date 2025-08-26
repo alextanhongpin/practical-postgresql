@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      Practical PostgreSQL: Patterns and Playbooks — Database Design Patterns
+    </title>
+    <meta
+      name="description"
+      content="Practical PostgreSQL: Patterns and Playbooks. A trustworthy, hands-on guide to database design patterns, constraints, query recipes, and maintainable systems."
+    />
+    <meta
+      name="keywords"
+      content="PostgreSQL, database design, schema design, SQL patterns, constraints, indexing, pagination, rollups"
+    />
+    <link rel="canonical" href="/" />
+    <meta name="theme-color" content="#0f766e" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Practical PostgreSQL: Patterns and Playbooks"
+    />
+    <meta
+      property="og:description"
+      content="Hands-on database design patterns and playbooks for PostgreSQL."
+    />
+  <meta property="og:image" content="assets/images/cover.png" />
+    <meta
+      property="og:image:alt"
+      content="Book cover: Practical PostgreSQL: Patterns and Playbooks"
+    />
+    <meta property="og:site_name" content="Practical PostgreSQL" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Practical PostgreSQL: Patterns and Playbooks"
+    />
+    <meta
+      name="twitter:description"
+      content="Hands-on database design patterns and playbooks for PostgreSQL."
+    />
+  <meta name="twitter:image" content="assets/images/cover.png" />
+
+    <!-- Icons -->
+  <link rel="icon" type="image/svg+xml" href="assets/images/cover.svg" />
+  <link rel="apple-touch-icon" href="assets/images/cover.png" />
+
+    <link rel="preload" href="styles.css" as="style" />
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- JSON-LD: Book/Product schema -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Book",
+        "name": "Practical PostgreSQL: Patterns and Playbooks",
+        "author": {
+          "@type": "Person",
+          "name": "Alex Tan Hong Pin"
+        },
+  "image": "assets/images/cover.png",
+        "inLanguage": "en",
+        "bookFormat": "EBook",
+        "description": "A practical guide to designing, evolving, and querying PostgreSQL databases using reusable patterns.",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Self-published"
+        },
+        "offers": [
+          {
+            "@type": "Offer",
+            "url": "https://1418455218498.gumroad.com/l/pnyxoj?_gl=1*1nikawg*_ga*MTE0NDMzOTQxLjE3NTU3OTY4ODY.*_ga_6LJN6D94N6*czE3NTYxOTM0ODkkbzMkZzEkdDE3NTYxOTM1NTEkajYwJGwwJGgw"
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div class="brand">
+          <img
+            src="assets/images/cover.png"
+            alt="Practical PostgreSQL book cover"
+            class="brand-cover"
+          />
+          <div class="brand-text">
+            <h1>Practical PostgreSQL</h1>
+            <p class="subtitle">Patterns and Playbooks for Database Design</p>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="#about">About</a>
+          <a href="#what-youll-learn">What you’ll learn</a>
+          <a href="#toc">Contents</a>
+          <a href="#toc" class="btn btn-primary">View samples</a>
+          <a
+            class="btn btn-primary"
+            href="https://1418455218498.gumroad.com/l/pnyxoj?_gl=1*1nikawg*_ga*MTE0NDMzOTQxLjE3NTU3OTY4ODY.*_ga_6LJN6D94N6*czE3NTYxOTM0ODkkbzMkZzEkdDE3NTYxOTM1NTEkajYwJGwwJGgw"
+            rel="noopener noreferrer"
+            target="_blank"
+            >Buy on Gumroad</a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container grid-2">
+          <div class="hero-copy">
+            <h2>Design databases with confidence</h2>
+            <p>
+              Stop guessing. Use proven patterns for constraints, pagination,
+              sorting, rollups, SCD, and more. This book translates production
+              lessons into copy‑paste starters with trade‑offs explained.
+            </p>
+            <div class="cta-group" id="cta">
+              <a class="btn btn-primary" href="#toc">View sample chapters</a>
+              <a
+                class="btn btn-primary"
+                href="https://1418455218498.gumroad.com/l/pnyxoj?_gl=1*1nikawg*_ga*MTE0NDMzOTQxLjE3NTU3OTY4ODY.*_ga_6LJN6D94N6*czE3NTYxOTM0ODkkbzMkZzEkdDE3NTYxOTM1NTEkajYwJGwwJGgw"
+                rel="noopener noreferrer"
+                target="_blank"
+                >Buy on Gumroad</a
+              >
+              <a
+                class="btn btn-ghost"
+                href="https://github.com/alextanhongpin/postgres-book"
+                rel="noopener"
+                target="_blank"
+                >View source</a
+              >
+            </div>
+            <p class="tiny">
+              By <strong>Alex Tan Hong Pin</strong> · Updated 2025
+            </p>
+          </div>
+          <div class="hero-art">
+            <img
+              src="assets/images/cover.png"
+              alt="Book cover: Practical PostgreSQL: Patterns and Playbooks"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="section">
+        <div class="container narrow">
+          <h3>Who is this for?</h3>
+          <p>
+            Engineers and data‑minded developers who want to build reliable,
+            comprehensible Postgres-backed systems. You’ll learn to encode
+            business rules in the schema, choose the right indexes, and keep
+            queries stable and fast.
+          </p>
+        </div>
+      </section>
+
+      <section id="what-youll-learn" class="section alt">
+        <div class="container">
+          <h3>What you’ll learn</h3>
+          <ul class="pill-list">
+            <li>Schema patterns that prevent bad states</li>
+            <li>Deterministic sorting and cursor pagination</li>
+            <li>Rollups and materialized views for fast dashboards</li>
+            <li>Slowly changing dimensions (intervals and snapshots)</li>
+            <li>Error handling and app error codes in PL/pgSQL</li>
+            <li>Polymorphism, trees (ltree), constraints, and more</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="toc" class="section">
+        <div class="container">
+          <h3>Inside the book</h3>
+          <div class="toc">
+            <div class="toc-group">
+              <h4>Part I: Fundamentals</h4>
+              <ul>
+                <li>Introduction</li>
+                <li>
+                  <a href="samples/01-intro/01-getting-started.html"
+                    >Getting started</a
+                  >
+                </li>
+                <li>Tools and environments</li>
+                <li>
+                  <a href="samples/01-intro/02-naming-convention.html"
+                    >Naming conventions</a
+                  >
+                </li>
+                <li>Overview</li>
+                <li>
+                  <a
+                    href="samples/02-basic-operations/01-schemas-and-tables.html"
+                    >Schemas and tables</a
+                  >
+                </li>
+                <li>Common columns</li>
+                <li>Base types</li>
+                <li>Advanced types</li>
+                <li>Enum types</li>
+                <li>Domain types</li>
+                <li>Composite types</li>
+                <li>Functions</li>
+                <li>Aggregate functions</li>
+                <li>Triggers</li>
+                <li>Triggers: audit fields and bulk edits</li>
+                <li>
+                  <a href="samples/02-basic-operations/11-constraints.html"
+                    >Constraints</a
+                  >
+                </li>
+                <li>Generated columns</li>
+                <li>Foreign keys</li>
+                <li>
+                  <a href="samples/02-basic-operations/14-indexes.html"
+                    >Indexes</a
+                  >
+                </li>
+                <li>Documentation</li>
+              </ul>
+            </div>
+            <div class="toc-group">
+              <h4>Part II: Reusable Data Patterns</h4>
+              <ul>
+                <li>Patterns overview</li>
+                <li>Constraints</li>
+                <li>Status</li>
+                <li>Soft delete</li>
+                <li>Counter cache</li>
+                <li>Categories and subcategories</li>
+                <li>Tree paths (ltree)</li>
+                <li>Polymorphism</li>
+                <li>Money</li>
+                <li>Config changesets</li>
+                <li>Campaign scheduling</li>
+                <li>
+                  <a
+                    href="samples/03-patterns/11-slowly-changing-dimensions.html"
+                    >Slowly changing dimensions</a
+                  >
+                </li>
+                <li>Slow‑changing dimensions (snapshot approach)</li>
+                <li>
+                  <a href="samples/03-patterns/12-sorting.html">Sorting</a>
+                </li>
+                <li>
+                  <a href="samples/03-patterns/13-cursor-pagination.html"
+                    >Cursor pagination</a
+                  >
+                </li>
+                <li>
+                  <a href="samples/03-patterns/14-rollup.html">Rollups</a>
+                </li>
+                <li>Compaction</li>
+                <li>
+                  <a href="samples/03-patterns/16-advisory-lock.html"
+                    >Advisory locks</a
+                  >
+                </li>
+                <li>Followers</li>
+                <li>Friendship</li>
+                <li>Optimistic locking</li>
+              </ul>
+            </div>
+            <div class="toc-group">
+              <h4>Part III–V: Application & Ops</h4>
+              <ul>
+                <li>Application overview</li>
+                <li>Dynamic WHERE filters</li>
+                <li>Dynamic sort</li>
+                <li>Pagination and keyset cursors</li>
+                <li>
+                  <a href="samples/06-application/04-upsert.html"
+                    >Upsert and MERGE</a
+                  >
+                </li>
+                <li>JSONB CRUD</li>
+                <li>
+                  <a href="samples/06-application/06-jsonb-recordset.html"
+                    >JSONB recordset and JSON_TABLE</a
+                  >
+                </li>
+                <li>UNNEST inline staging</li>
+                <li>Seeding data</li>
+                <li>
+                  <a href="samples/06-application/09-testing-strategies.html"
+                    >Testing strategies</a
+                  >
+                </li>
+                <li>Fast fixtures and template DB</li>
+                <li>Test settings</li>
+                <li>Template database cloning</li>
+                <li>Dates and time zones</li>
+                <li>Changes overview</li>
+                <li>
+                  <a href="samples/05-changes/01-migration.html"
+                    >Migrations and order</a
+                  >
+                </li>
+                <li>Table lifecycle</li>
+                <li>Column changes and backfills</li>
+                <li>Type changes</li>
+                <li>Add and validate constraints</li>
+                <li>Roles and users</li>
+                <li>Debugging overview</li>
+                <li>Database and table size</li>
+                <li>
+                  <a href="samples/04-debugging/02-slow-query.html"
+                    >Slow query triage</a
+                  >
+                </li>
+                <li>Query helper functions</li>
+                <li>Locks and deadlocks</li>
+                <li>Autovacuum and bloat</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section alt">
+        <div class="container narrow">
+          <h3>Why this book?</h3>
+          <p>
+            It focuses on decisions: what you gain, what you trade, and how to
+            evolve safely. Examples are small and runnable. Patterns are
+            practical and used in real teams.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>
+          © 2025 Alex Tan Hong Pin ·
+          <a href="mailto:alextan220990@gmail.com">Contact</a>
+        </p>
+        <nav class="footer-nav">
+          <a href="#toc">View sample chapters</a>
+          <a
+            class="btn btn-primary"
+            href="https://1418455218498.gumroad.com/l/pnyxoj?_gl=1*1nikawg*_ga*MTE0NDMzOTQxLjE3NTU3OTY4ODY.*_ga_6LJN6D94N6*czE3NTYxOTM0ODkkbzMkZzEkdDE3NTYxOTM1NTEkajYwJGwwJGgw"
+            rel="noopener noreferrer"
+            target="_blank"
+            >Buy on Gumroad</a
+          >
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

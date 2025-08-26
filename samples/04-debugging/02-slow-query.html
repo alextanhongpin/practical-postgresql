@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>02-slow-query</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="debugging-slow-queries">Debugging Slow Queries</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>You’re on-call and a critical endpoint slowed down after a feature
+launch. Product dashboards time out and customers see spinners. You need
+a repeatable way to find the slowest queries, understand why the planner
+chose a bad path, and apply the smallest fix (index, rewrite, fresh
+stats) to restore performance.</p>
+<p>Slow queries hurt performance. PostgreSQL has tools to find and fix
+them.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>Always start with a plan (EXPLAIN ANALYZE, BUFFERS) to see reality
+vs estimates.</li>
+<li>Cheap fixes first: fresh stats, missing index, narrower SELECT,
+correct data types.</li>
+<li>Verify change with before/after metrics and drop redundant indexes
+to keep writes fast.</li>
+</ul>
+<h2 id="slow-query-triage-make-it-fast">Slow query triage (make it
+fast)</h2>
+<p>Goal: Find why a query is slow, fix cheap things first, verify
+improvement.</p>
+<h2 id="implementation-step-by-step-sql">Implementation (step by step
+SQL)</h2>
+<h3 id="get-the-plan">1. Get the plan</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">EXPLAIN</span> <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> orders <span class="kw">WHERE</span> user_id <span class="op">=</span> <span class="dv">123</span>;</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">EXPLAIN</span> (<span class="kw">ANALYZE</span>, BUFFERS) <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> orders <span class="kw">WHERE</span> user_id <span class="op">=</span> <span class="dv">123</span>;</span></code></pre></div>
+<p>Look for:</p>
+<ul>
+<li>Seq Scan on huge table with selective predicate → missing index</li>
+<li>Nested Loop with large inner row estimate → bad stats / wrong join
+order</li>
+<li>Hash Join + high rows removed afterwards → filter pushdown
+opportunity</li>
+<li>Lots of time in sorting / hashing → maybe reduce columns or add
+index matching order</li>
+</ul>
+<h3 id="cheap-fix-checklist">2. Cheap fix checklist</h3>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Likely Fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Seq Scan on selective column</td>
+<td>CREATE INDEX (col)</td>
+</tr>
+<tr>
+<td>Using function on column in WHERE</td>
+<td>Expression index or precomputed column</td>
+</tr>
+<tr>
+<td>Repeated large sort</td>
+<td>Index on ORDER BY columns</td>
+</tr>
+<tr>
+<td>Low correlation after update</td>
+<td>VACUUM (ANALYZE) or just ANALYZE</td>
+</tr>
+<tr>
+<td>Underestimated rows</td>
+<td>Increase statistics target (ALTER TABLE … ALTER COLUMN … SET
+STATISTICS n)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="pg_stat_statements-top-offenders">3. pg_stat_statements (top
+offenders)</h3>
+<p>Prerequisite: the extension must be preloaded at server start.</p>
+<ul>
+<li>Set shared_preload_libraries and restart the server, then run CREATE
+EXTENSION in the database.</li>
+</ul>
+<p>Example (docker-compose):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">services</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">db</span><span class="kw">:</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">image</span><span class="kw">:</span><span class="at"> postgres:17.4</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">ports</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> ${DB_HOST}:${DB_PORT}:5432</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">        command</span><span class="kw">: </span><span class="ch">&gt;-</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            -c shared_preload_libraries=pg_stat_statements</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            -c pg_stat_statements.track=all</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            -c pg_stat_statements.max=10000</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">environment</span><span class="kw">:</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">POSTGRES_DB</span><span class="kw">:</span><span class="at"> ${DB_NAME}</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">POSTGRES_USER</span><span class="kw">:</span><span class="at"> ${DB_USER}</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="fu">POSTGRES_PASSWORD</span><span class="kw">:</span><span class="at"> ${DB_PASS}</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> postgres_data:/var/lib/postgresql/data</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="at">            </span><span class="kw">-</span><span class="at"> ./internal/:/tmp/postgres/</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">volumes</span><span class="kw">:</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">postgres_data</span><span class="kw">:</span></span></code></pre></div>
+<p>Then enable in your database:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> EXTENSION <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">EXISTS</span> pg_stat_statements;</span></code></pre></div>
+<p>PostgreSQL 15/16+ (modern columns):</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">toplevel</span>,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    queryid,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    calls,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    total_plan_time <span class="kw">AS</span> plan_ms,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    total_exec_time <span class="kw">AS</span> exec_ms,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ROUND</span>((total_exec_time <span class="op">/</span> <span class="fu">NULLIF</span>(calls,<span class="dv">0</span>)):<span class="ch">:numeric</span>, <span class="dv">2</span>) <span class="kw">AS</span> mean_exec_ms,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">rows</span>,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">query</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> pg_stat_statements</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> <span class="kw">toplevel</span> <span class="kw">IS</span> <span class="kw">TRUE</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> total_exec_time <span class="kw">DESC</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
+<p>Note: total_plan_time, total_exec_time (PG 15/16+) and total_time (PG
+13–14) are already in milliseconds. No need to multiply by 1000. The
+mean above is ms per call.</p>
+<p>PostgreSQL 13–14 (legacy column names):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    calls,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    total_time   <span class="kw">AS</span> total_ms,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    mean_time    <span class="kw">AS</span> mean_ms,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">rows</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">query</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> pg_stat_statements</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ORDER</span> <span class="kw">BY</span> total_time <span class="kw">DESC</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">LIMIT</span> <span class="dv">10</span>;</span></code></pre></div>
+<p>Tips</p>
+<ul>
+<li>Reset stats when starting a local investigation:
+<code>SELECT pg_stat_statements_reset();</code></li>
+<li>Filter by database if needed:
+<code>WHERE dbid = (SELECT oid FROM pg_database WHERE datname = current_database())</code>.</li>
+<li>Focus on high total cost first (total_exec_time/total_time), then
+high mean per call.</li>
+</ul>
+<h3 id="lock-wait-vs-compute">4. Lock wait vs compute</h3>
+<p>If runtime is long but buffers and rows are low, it may be waiting on
+a lock. See <a href="04-locks.md">Locks</a> for diagnosing blockers and
+deadlocks.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pid, now()<span class="op">-</span>query_start <span class="kw">AS</span> run, wait_event_type, wait_event, <span class="kw">query</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> pg_stat_activity <span class="kw">WHERE</span> state <span class="op">&lt;&gt;</span> <span class="st">&#39;idle&#39;</span> <span class="kw">ORDER</span> <span class="kw">BY</span> run <span class="kw">DESC</span>;</span></code></pre></div>
+<h3 id="refresh-statistics">5. Refresh statistics</h3>
+<p>Outdated stats cause bad plans.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ANALYZE</span> orders; <span class="co">-- or entire DB</span></span></code></pre></div>
+<p>For large changes, autovacuum might lag.</p>
+<h3 id="avoid-select">6. Avoid SELECT *</h3>
+<p>Pulling unused large columns increases I/O:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="kw">id</span>, user_id, status <span class="kw">FROM</span> orders <span class="kw">WHERE</span> user_id<span class="op">=</span><span class="dv">123</span>;</span></code></pre></div>
+<p>This avoids visiting TOAST for large JSON/text.</p>
+<h3 id="batch-backfills-and-updates">7. Batch backfills and updates</h3>
+<p>A long UPDATE that touches many rows can block. Process in
+chunks:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">UPDATE</span> orders <span class="kw">SET</span> flag<span class="op">=</span><span class="kw">true</span> <span class="kw">WHERE</span> <span class="op">..</span>. <span class="kw">LIMIT</span> <span class="dv">1000</span>; <span class="co">-- repeat in app/job</span></span></code></pre></div>
+<p>(Or use ORDER BY with a primary key cursor.)</p>
+<h3 id="log-slow-queries">8. Log slow queries</h3>
+<p>Set <code>log_min_duration_statement = 500</code> (ms). Keep it
+practical; too low is noisy. Rotate and parse logs.</p>
+<h3 id="explain-analyze-caution">9. EXPLAIN ANALYZE caution</h3>
+<p>It runs the query. For destructive queries, wrap in a transaction and
+ROLLBACK, or test on staging.</p>
+<h3 id="index-creation-safety">10. Index creation safety</h3>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">INDEX</span> CONCURRENTLY idx_orders_user_id <span class="kw">ON</span> orders(user_id);</span></code></pre></div>
+<p>This avoids a long ACCESS EXCLUSIVE lock. It needs a separate
+transaction and cannot be inside another transaction block.</p>
+<h3 id="common-pitfalls">11. Common pitfalls</h3>
+<ul>
+<li>Function on column prevents index use
+(<code>WHERE lower(email)=...</code>) → add functional index.</li>
+<li>Implicit cast mismatch (text vs uuid) → explicit cast or correct
+type.</li>
+<li>Leading wildcard (<code>LIKE &#39;%abc&#39;</code>) → cannot use btree;
+consider trigram or GIN.</li>
+<li>Over-indexing: too many similar indexes slow writes.</li>
+</ul>
+<h3 id="verification-loop">12. Verification loop</h3>
+<ol type="1">
+<li>Capture baseline (mean_time, buffers, runtime)</li>
+<li>Apply change (index / rewrite)</li>
+<li>Re-run EXPLAIN (ANALYZE, BUFFERS)</li>
+<li>Confirm timing + buffer reductions</li>
+<li>Drop any now-redundant index</li>
+</ol>
+<h3 id="summary-checklist">13. Summary checklist</h3>
+<ul>
+<li>Plan inspected?</li>
+<li>Stats fresh?</li>
+<li>Missing / wrong index fixed?</li>
+<li>Data fetched trimmed?</li>
+<li>Lock waits ruled out?</li>
+<li>Improvement measured?</li>
+</ul>
+<p>Fix the highest total cost query, then repeat. Small consistent wins
+beat big refactors.</p>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>Rewrite vs index: sometimes reformulating the query (join order,
+predicate pushdown) beats adding yet another index.</li>
+<li>Sampling: on giant tables, test on a realistic subset to iterate
+quickly, then verify on staging with size parity.</li>
+<li>Planner hints aren’t native; use enable_* GUC toggles only for
+diagnosis, not in production.</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>EXPLAIN without ANALYZE shows estimates only; you may miss the real
+cost.</li>
+<li>Over-indexing speeds reads but hurts writes; balance and prune
+duplicates.</li>
+<li>Function-wrapped predicates block index use unless you add
+expression indexes.</li>
+</ul>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Measure with EXPLAIN (ANALYZE, BUFFERS), fix the smallest cause
+first, and verify with before/after timing and buffers. Keep indexes
+purposeful and trim SELECT lists.</p>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Capture top 10 queries by total_time via pg_stat_statements and fix
+one with the cheapest index.</li>
+<li>Rewrite a query to push filters before joins and compare plans.</li>
+<li>Add a functional index for a lower(email) lookup and confirm index
+usage in the plan.</li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Plan</strong>: Use EXPLAIN (ANALYZE, BUFFERS). Signal: seq
+scan on selective filter. Fix: add/adjust index. Verify: buffers/time
+drop.</li>
+<li><strong>Statistics</strong>: ANALYZE table. Signal: row estimate off
+vs actual. Fix: raise STATISTICS target. Verify: estimates align.</li>
+<li><strong>Lock Wait</strong>: Inspect pg_stat_activity wait_event.
+Signal: wait_event_type = ‘Lock’. Fix: resolve blocker or reschedule.
+Verify: runtime shrinks.</li>
+<li><strong>Column Trim</strong>: Select only needed columns. Signal:
+high buffer hits, TOAST reads. Fix: avoid SELECT *. Verify: lower
+I/O.</li>
+<li><strong>Functional Predicate</strong>: WHERE function(col) = value.
+Signal: no index usage. Fix: expression index. Verify: index scan
+appears.</li>
+<li><strong>Sorting</strong>: Large Sort node with high time/mem. Fix:
+index matching ORDER BY. Verify: Sort removed.</li>
+<li><strong>Join Order</strong>: Nested Loop with huge inner scans.
+Signal: bad estimates. Fix: analyze + rewrite join. Verify: plan uses
+better join.</li>
+<li><strong>Regressions</strong>: New index overhead. Signal: slower
+writes. Fix: drop redundant index. Verify: write latency recovers.</li>
+<li><strong>Logging</strong>: Set log_min_duration_statement. Signal:
+too noisy or missing. Fix: tune threshold. Verify: actionable
+entries.</li>
+<li><strong>Verify</strong>: Re-run baseline metrics after change. If
+unclear, capture after numbers and document delta.</li>
+<li><strong>Pitfalls</strong>: EXPLAIN without ANALYZE; over-indexing;
+ignoring VACUUM.</li>
+</ul>
+<p>Loop: Measure → Hypothesize → Change → Verify → Document.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>EXPLAIN:
+https://www.postgresql.org/docs/current/using-explain.html</li>
+<li>Buffer usage (BUFFERS):
+https://www.postgresql.org/docs/current/using-explain.html#USING-EXPLAIN-BUFFERS</li>
+<li>Query planning (planner):
+https://www.postgresql.org/docs/current/runtime-config-query.html</li>
+<li>Statistics target:
+https://www.postgresql.org/docs/current/runtime-config-query.html#GUC-DEFAULT-STATISTICS-TARGET</li>
+<li>pg_stat_statements:
+https://www.postgresql.org/docs/current/pgstatstatements.html</li>
+<li>Logging slow statements (log_min_duration_statement):
+https://www.postgresql.org/docs/current/runtime-config-logging.html#GUC-LOG-MIN-DURATION-STATEMENT</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>11-constraints</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="constraints-rules-the-database-enforces">Constraints (Rules the
+Database Enforces)</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>Your team keeps shipping validations in app code, but data still goes
+bad when scripts or new services bypass checks. You want the database to
+reject invalid rows so bugs stop at the door. PostgreSQL constraints
+make rules first-class and visible in schema.</p>
+<h2 id="core-concept">Core Concept</h2>
+<p>Constraints are declarative rules that PostgreSQL enforces
+automatically. They block bad writes and keep data clean regardless of
+how it’s written (app, script, or psql).</p>
+<p>Core types:</p>
+<ul>
+<li><strong>PRIMARY KEY</strong>: unique row id; implies NOT NULL and
+UNIQUE.</li>
+<li><strong>UNIQUE</strong>: no duplicate values in a column or a set of
+columns.</li>
+<li><strong>CHECK</strong>: a per-row rule that must be true.</li>
+<li><strong>FOREIGN KEY</strong>: child values must exist in the parent
+table.</li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<h3 id="check-custom-rule">1. CHECK (custom rule)</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> products (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  price <span class="dt">NUMERIC</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> chk_products_price_positive <span class="kw">CHECK</span> (price <span class="op">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>Outcome: inserting a negative price fails.</p>
+<h3 id="unique-no-duplicates">2. UNIQUE (no duplicates)</h3>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> users (</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  email TEXT <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> uidx_users_email <span class="kw">UNIQUE</span> (email)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>You can also make a unique rule on many columns (for example, one row
+per (user_id, year)).</p>
+<h3 id="naming-style">3. Naming style</h3>
+<p>Name constraints for clarity and easy ALTER/DROP:</p>
+<ul>
+<li><code>pk_&lt;table&gt;</code></li>
+<li><code>uidx_&lt;table&gt;_&lt;col&gt;</code></li>
+<li><code>chk_&lt;table&gt;_&lt;meaning&gt;</code></li>
+<li><code>fk_&lt;table&gt;_&lt;refcol&gt;</code></li>
+</ul>
+<p>Example:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> orders (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  user_id <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  total <span class="dt">NUMERIC</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> fk_orders_user_id <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (user_id) <span class="kw">REFERENCES</span> users(<span class="kw">id</span>),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> chk_orders_total_positive <span class="kw">CHECK</span> (total <span class="op">&gt;=</span> <span class="dv">0</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<h3 id="deferrable-constraints-check-at-commit">4. Deferrable
+constraints (check at commit)</h3>
+<p>Hypothetical: you keep a ranked list with a UNIQUE position. You need
+to swap positions of two items. If uniqueness is checked on each UPDATE,
+the first update fails. You want the database to allow temporary
+duplicates during the transaction and only check at COMMIT.</p>
+<p>Deferrable makes this work. PostgreSQL checks these constraints at
+COMMIT, not at each row change.</p>
+<p>How to declare</p>
+<ul>
+<li>Add DEFERRABLE to a FOREIGN KEY or UNIQUE constraint.</li>
+<li>Choose INITIALLY DEFERRED (default to end-of-transaction checks) or
+INITIALLY IMMEDIATE (check now, but you can defer inside a
+transaction).</li>
+</ul>
+<p>Temporarily defer inside a transaction</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span>;</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SET</span> <span class="kw">CONSTRAINTS</span> <span class="kw">ALL</span> <span class="kw">DEFERRED</span>;             <span class="co">-- or a specific name</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- do your updates/inserts here</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMIT</span>;                                     <span class="co">-- checks run now</span></span></code></pre></div>
+<p>Example A: swapping positions with a deferrable UNIQUE</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> list_items (</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  position <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> uidx_list_items_position <span class="kw">UNIQUE</span> (position) <span class="kw">DEFERRABLE</span> <span class="kw">INITIALLY</span> <span class="kw">DEFERRED</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span>;</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UPDATE</span> list_items <span class="kw">SET</span> position <span class="op">=</span> <span class="dv">0</span> <span class="kw">WHERE</span> position <span class="op">=</span> <span class="dv">1</span>; <span class="co">-- temporary duplicate/gap allowed</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UPDATE</span> list_items <span class="kw">SET</span> position <span class="op">=</span> <span class="dv">1</span> <span class="kw">WHERE</span> position <span class="op">=</span> <span class="dv">2</span>;</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UPDATE</span> list_items <span class="kw">SET</span> position <span class="op">=</span> <span class="dv">2</span> <span class="kw">WHERE</span> position <span class="op">=</span> <span class="dv">0</span>;</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMIT</span>; <span class="co">-- uniqueness checked here</span></span></code></pre></div>
+<p>Without DEFERRABLE, the first UPDATE would violate uniqueness.</p>
+<p>Example B: insert child before parent with a deferrable FOREIGN
+KEY</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> users (</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> invoices (</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  user_id <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">CONSTRAINT</span> fk_invoices_user_id</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (user_id) <span class="kw">REFERENCES</span> users(<span class="kw">id</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">DEFERRABLE</span> <span class="kw">INITIALLY</span> <span class="kw">DEFERRED</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span>;</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">INSERT</span> <span class="kw">INTO</span> invoices (<span class="kw">id</span>, user_id) <span class="kw">VALUES</span> (<span class="dv">1</span>, <span class="dv">100</span>); <span class="co">-- parent 100 not yet present</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="kw">INSERT</span> <span class="kw">INTO</span> users (<span class="kw">id</span>) <span class="kw">VALUES</span> (<span class="dv">100</span>);                 <span class="co">-- parent arrives later</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMIT</span>;                                               <span class="co">-- FK checked now and passes</span></span></code></pre></div>
+<p>Self-reference also works the same way (a row pointing to another row
+in the same table). Define the FK as DEFERRABLE to allow a sequence of
+updates/inserts that is only valid at the end.</p>
+<p>Notes</p>
+<ul>
+<li>Use constraint syntax (ALTER TABLE … ADD CONSTRAINT … UNIQUE/FOREIGN
+KEY). A raw CREATE UNIQUE INDEX cannot be DEFERRABLE.</li>
+<li>Keep all related changes inside one transaction. Mid-transaction
+states can be invalid, and other sessions will not see a globally valid
+state until COMMIT.</li>
+<li>INITIALLY IMMEDIATE + SET CONSTRAINTS … DEFERRED lets you defer only
+in special code paths.</li>
+<li>Only UNIQUE/PRIMARY KEY/EXCLUSION and FOREIGN KEY can be deferrable.
+CHECK and NOT NULL are not deferrable.</li>
+</ul>
+<p>Troubleshooting and migration</p>
+<ul>
+<li><p>Error: “constraint XYZ is not deferrable”</p>
+<ul>
+<li>Check the flag:</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> conname, <span class="kw">deferrable</span>, initially_deferred</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> pg_constraint</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> conrelid <span class="op">=</span> <span class="st">&#39;your_table&#39;</span>:<span class="ch">:regclass</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">AND</span> conname <span class="op">=</span> <span class="st">&#39;your_constraint_name&#39;</span>;</span></code></pre></div></li>
+<li><p>SET CONSTRAINTS works only inside a transaction and only for
+deferrable constraints:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span>;</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SET</span> <span class="kw">CONSTRAINTS</span> your_constraint_name <span class="kw">DEFERRED</span>;</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- do work</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMIT</span>;</span></code></pre></div></li>
+<li><p>Make a FOREIGN KEY deferrable (low risk path)</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> invoices</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">DROP</span> <span class="kw">CONSTRAINT</span> fk_invoices_user_id;</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> invoices</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ADD</span> <span class="kw">CONSTRAINT</span> fk_invoices_user_id</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">FOREIGN</span> <span class="kw">KEY</span> (user_id) <span class="kw">REFERENCES</span> users(<span class="kw">id</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">DEFERRABLE</span> <span class="kw">INITIALLY</span> <span class="kw">IMMEDIATE</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">NOT</span> VALID;         <span class="co">-- skip full check now</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> invoices</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="kw">VALIDATE</span> <span class="kw">CONSTRAINT</span> fk_invoices_user_id;  <span class="co">-- check existing rows online</span></span></code></pre></div></li>
+<li><p>Make a UNIQUE constraint deferrable</p>
+<ul>
+<li><p>PostgreSQL does not support a deferrable unique index. Deferrable
+applies to the table constraint.</p></li>
+<li><p>You cannot turn an existing unique index into a deferrable
+constraint in place.</p></li>
+<li><p>Simple path (maintenance window):</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> users <span class="kw">DROP</span> <span class="kw">CONSTRAINT</span> uidx_users_email; <span class="co">-- old unique</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">ALTER</span> <span class="kw">TABLE</span> users</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="kw">ADD</span> <span class="kw">CONSTRAINT</span> uidx_users_email</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="kw">UNIQUE</span> (email) <span class="kw">DEFERRABLE</span> <span class="kw">INITIALLY</span> <span class="kw">DEFERRED</span>;     <span class="co">-- new deferrable unique</span></span></code></pre></div></li>
+<li><p>Lower-lock idea (plan carefully): build a second unique index
+concurrently, switch to a deferrable unique constraint during a short
+window, then drop the old index.</p>
+<ul>
+<li>Build index: CREATE UNIQUE INDEX CONCURRENTLY uidx_users_email_tmp
+ON users(email);</li>
+<li>In a window, DROP the old constraint, ADD a new deferrable UNIQUE
+(which will create/attach an index), then DROP the extra index.</li>
+<li>Test on staging first; exact locks depend on version.</li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="partial-uniqueness-and-covering">5. Partial uniqueness and
+covering</h3>
+<p>For patterns like partial unique indexes and covering (INCLUDE)
+indexes, see the Indexes chapter. That chapter shows how to tailor
+uniqueness to active rows and how to include extra columns for faster
+reads.</p>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>Domains: encapsulate common CHECK logic in a reusable type.</li>
+<li>Exclusion constraints: prevent overlapping ranges or conflicting
+values using GiST.</li>
+<li>Deferrable vs immediate: deferring unblocks swaps and batch changes,
+but hides invalid states until COMMIT and adds a bit of overhead. Use
+only when needed.</li>
+<li>Partial unique index vs table-level UNIQUE: partial is flexible but
+lives as an index (introspection differs).</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>No constraints early → bad data and costly cleanups. Add PK, FK, and
+key CHECKs on day one.</li>
+<li>Unclear names make operations hard. Use pk<em>, fk</em>, uidx<em>,
+chk</em> prefixes consistently.</li>
+<li>Complex CHECK with subqueries can hurt performance and lock. Prefer
+triggers or periodic validators.</li>
+<li>Type/collation mismatches for FKs or UNIQUE across tables block
+creation.</li>
+</ul>
+<h2 id="recap">Recap</h2>
+<ul>
+<li>Constraints declare rules the database enforces. They block bad data
+at the door.</li>
+<li>Use PRIMARY KEY, UNIQUE, CHECK, and FOREIGN KEY where they fit; name
+them clearly.</li>
+<li>Use DEFERRABLE when correctness depends on the end state of a
+transaction.</li>
+<li>Partial unique indexes and INCLUDE help tailor performance and
+business rules.</li>
+</ul>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Add a CHECK to ensure price &gt;= 0 and verify the error on a
+negative insert.</li>
+<li>Make (user_id, year) unique in a table and test with
+duplicates.</li>
+<li>Create a DEFERRABLE UNIQUE on position and perform a three-way swap
+in one transaction.</li>
+<li>Add a partial unique index on users(email) WHERE is_active and test
+activation toggles.</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Constraints overview:
+https://www.postgresql.org/docs/current/ddl-constraints.html</li>
+<li>NOT VALID and VALIDATE CONSTRAINT:
+https://www.postgresql.org/docs/current/sql-altertable.html#SQL-ALTERTABLE-VALIDATE-CONSTRAINT</li>
+<li>Deferrable constraints:
+https://www.postgresql.org/docs/current/sql-createtable.html#SQL-CREATETABLE-CONSTRAINTS</li>
+<li>Exclusion constraints:
+https://www.postgresql.org/docs/current/ddl-constraints.html#DDL-CONSTRAINTS-EXCLUSION</li>
+</ul>
+</body>
+</html>

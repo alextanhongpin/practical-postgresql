@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>01-schemas-and-tables</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="schemas-and-tables">Schemas and Tables</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>You’ve inherited a growing monolith database. Names collide, and
+accidental cross-feature queries cause bugs. You need a clean way to
+group objects per feature/team and create tables with safe defaults.
+PostgreSQL schemas give you namespaces, and well-structured tables make
+intent clear from day one.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>A schema is a namespace that groups database objects (tables, views,
+functions). By default everything goes into <code>public</code>.</li>
+<li>A table stores rows. Always give tables a primary key—tools and ORMs
+expect it. Even for write-only logs, add an identity column for ordering
+and debugging.</li>
+<li>Prefer fully qualified names (for example, <code>auth.users</code>).
+Use schemas early to avoid name collisions and to manage
+permissions.</li>
+<li>Tip: <code>user</code> is reserved. Prefer <code>app_user</code> or
+<code>auth.user</code>. Avoid quoting identifiers unless necessary.</li>
+</ul>
+<h2 id="implementation">Implementation</h2>
+<p>Follow these steps to organize with schemas and create solid
+tables.</p>
+<h3 id="create-a-schema-and-a-table">1. Create a schema and a table</h3>
+<p>Create an <code>accounting</code> schema and a table inside it:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">SCHEMA</span> accounting;</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> accounting.invoices (</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    customer_id <span class="dt">INT</span> <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    amount <span class="dt">NUMERIC</span>(<span class="dv">10</span>,<span class="dv">2</span>) <span class="kw">NOT</span> <span class="kw">NULL</span>,</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    issued_at TIMESTAMPTZ <span class="kw">DEFAULT</span> now()</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>Outcome: a new namespace and a table with clear types and a primary
+key.</p>
+<h3 id="reuse-table-names-safely-across-domains">2. Reuse table names
+safely across domains</h3>
+<p>Two departments track their own employee lists without conflicts:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">SCHEMA</span> sales;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">SCHEMA</span> hr;</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> sales.employees (</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  name TEXT <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">TABLE</span> hr.employees (</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="kw">id</span> <span class="dt">INT</span> <span class="kw">GENERATED</span> ALWAYS <span class="kw">AS</span> IDENTITY <span class="kw">PRIMARY</span> <span class="kw">KEY</span>,</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  name TEXT <span class="kw">NOT</span> <span class="kw">NULL</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>);</span></code></pre></div>
+<p>Outcome: same table name, different schemas, no conflict.</p>
+<h3 id="adopt-schemas-later-migration-steps">3. Adopt schemas later
+(migration steps)</h3>
+<p>Move tables out of <code>public</code> with minimal risk:</p>
+<ol type="1">
+<li>Create the new schema.</li>
+<li>Move tables:
+<ul>
+<li><code>ALTER TABLE public.some_table SET SCHEMA app;</code></li>
+</ul></li>
+<li>Update code to reference <code>schema.table</code> (or adjust
+<code>search_path</code>).</li>
+<li>Fix grants: ensure the app role has USAGE on the schema.</li>
+<li>Lock down <code>public</code> if you no longer want new objects
+there.</li>
+</ol>
+<h3 id="permissions-quick-start">4. Permissions quick-start</h3>
+<p>Grant usage on a schema to a role and limit writes as needed:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">USAGE</span> <span class="kw">ON</span> <span class="kw">SCHEMA</span> accounting <span class="kw">TO</span> app_role;</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">GRANT</span> <span class="kw">SELECT</span>, <span class="kw">INSERT</span>, <span class="kw">UPDATE</span>, <span class="kw">DELETE</span> <span class="kw">ON</span> <span class="kw">ALL</span> <span class="kw">TABLES</span> <span class="kw">IN</span> <span class="kw">SCHEMA</span> accounting <span class="kw">TO</span> app_role;</span></code></pre></div>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>Staying in <code>public</code>: OK for prototypes or learning. As
+concerns split (auth, billing, analytics), add schemas.</li>
+<li>search_path: lets you omit schema prefixes, but can hide ambiguity.
+Prefer fully qualified names in migrations and critical code.</li>
+<li>Naming: choose predictable, lowercase names. Avoid reserved words.
+Don’t rely on quoted identifiers.</li>
+<li>Multi-tenant patterns: separate schemas per tenant can work for
+small numbers; for many tenants prefer a single schema with
+tenant_id.</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>Putting everything in <code>public</code> leads to all-or-nothing
+permissions and name collisions.</li>
+<li>Using reserved names like <code>user</code> forces quoting and
+causes tool friction.</li>
+<li>Forgetting grants after moving tables—apps get “permission
+denied.”</li>
+<li>Relying on search_path differences between sessions can cause
+surprises.</li>
+</ul>
+<h2 id="recap">Recap</h2>
+<ul>
+<li>Schemas split names and permissions. Use them early to avoid a messy
+<code>public</code> schema.</li>
+<li>Always define a primary key (even for logs) to make operations and
+debugging easier.</li>
+<li>Moving later is possible but touches names and permissions; plan
+grants and search_path.</li>
+<li>Prefer fully qualified names when clarity matters.</li>
+</ul>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ol type="1">
+<li>Create two schemas (app, audit) and move an existing table into
+each. Adjust <code>search_path</code> to test resolution.</li>
+<li>Add a role that can only SELECT from <code>audit.*</code>. Verify
+that a write fails.</li>
+<li>Rename a table while moving it to a new schema in one migration
+(<code>ALTER TABLE ... SET SCHEMA ... RENAME TO ...</code>).</li>
+<li>Create <code>hr.employees</code> and <code>sales.employees</code>,
+then write a query that unions them with a source column.</li>
+<li>Lock down <code>public</code> so no new objects can be created
+there. Record the GRANT statements you changed.</li>
+</ol>
+<h2 id="references">References</h2>
+<ul>
+<li>Schemas and search path:
+https://www.postgresql.org/docs/current/ddl-schemas.html</li>
+<li>CREATE SCHEMA:
+https://www.postgresql.org/docs/current/sql-createschema.html</li>
+<li>CREATE TABLE:
+https://www.postgresql.org/docs/current/sql-createtable.html</li>
+<li>ALTER TABLE:
+https://www.postgresql.org/docs/current/sql-altertable.html</li>
+<li>Information schema:
+https://www.postgresql.org/docs/current/information-schema.html</li>
+</ul>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>09-testing-strategies</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="testing-strategy">Testing Strategy</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>Bugs slip past mocked database layers because SQL, constraints, and
+triggers are not exercised. You want fast, reliable tests that use a
+real Postgres instance, isolate data per test run, and avoid flaky
+assertions.</p>
+<h2 id="pyramid">Pyramid</h2>
+<ol type="1">
+<li>Unit (pure logic / SQL fragments)</li>
+<li>Integration (real DB)</li>
+<li>Contract / API</li>
+</ol>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>Prefer a real database for integration tests and isolate state per
+test run.</li>
+<li>Keep data setup minimal and explicit via factories; avoid heavy
+fixtures.</li>
+<li>Make time and randomness deterministic to reduce flakes.</li>
+</ul>
+<h2 id="implementation-step-by-step-sql">Implementation (Step by Step
+SQL)</h2>
+<h2 id="real-db-over-mocks">Real DB over Mocks</h2>
+<ul>
+<li>Exercise SQL, constraints, triggers.</li>
+<li>Catch migration drift.</li>
+</ul>
+<h2 id="test-db-lifecycle">Test DB Lifecycle</h2>
+<ul>
+<li>Dedicated database per test run.</li>
+<li>Schema migrated up (no down needed).</li>
+<li>Wrap each test in transaction + rollback OR use template
+cloning.</li>
+</ul>
+<h2 id="parallelism">Parallelism</h2>
+<ul>
+<li>One DB per worker process to avoid lock contention.</li>
+</ul>
+<h2 id="data-isolation-options">Data Isolation Options</h2>
+<table>
+<thead>
+<tr>
+<th>Technique</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transaction Rollback</td>
+<td>Fast</td>
+<td>No cross-conn coverage</td>
+</tr>
+<tr>
+<td>Truncate Tables</td>
+<td>Cross-conn</td>
+<td>Slower, need FK defers</td>
+</tr>
+<tr>
+<td>Template DB Clone</td>
+<td>Near-instant</td>
+<td>Requires superuser</td>
+</tr>
+</tbody>
+</table>
+<h2 id="determinism">Determinism</h2>
+<ul>
+<li>Freeze time (e.g. set timezone, mock clock source).</li>
+<li>Seed RNG.</li>
+<li>Avoid relying on implicit ordering.</li>
+</ul>
+<h2 id="flaky-sources">Flaky Sources</h2>
+<ul>
+<li>Timeouts too tight.</li>
+<li>Non-deterministic ORDER BY.</li>
+<li>Background workers not synchronized.</li>
+</ul>
+<h2 id="assertions">Assertions</h2>
+<p>Prefer structural over incidental:</p>
+<ul>
+<li>Assert row count, key presence, invariant truths.</li>
+<li>Avoid matching full JSON if only one field matters.</li>
+</ul>
+<h2 id="tooling">Tooling</h2>
+<ul>
+<li>pgTAP for SQL-level tests (optional).</li>
+<li>App language test framework (Go testing, etc.).</li>
+</ul>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>Transaction rollback vs template clone: rollback is fast and simple;
+template clone isolates cross-connection effects but needs
+privileges.</li>
+<li>Factories vs fixtures: factories are flexible and minimal; fixtures
+are easy to get started but grow brittle.</li>
+<li>Dockerized DB vs local cluster: Docker is portable; local cluster
+can be faster with less setup.</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>Relying on implicit ordering causes random failures; always ORDER
+BY.</li>
+<li>Global mutable state across tests creates heisenbugs; avoid shared
+singletons.</li>
+<li>Mocked DB layers miss constraint/trigger behavior; run integration
+tests regularly.</li>
+</ul>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Use a real DB, isolate state per test, keep data setup minimal and
+explicit, and make time/random deterministic to avoid flakes.</p>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Add ORDER BY to a failing flaky test and verify stability.</li>
+<li>Replace a large YAML fixture with a factory helper and compare
+readability.</li>
+<li>Switch from rollback to template DB cloning in CI and measure speed
+vs isolation. Use a real database, isolate fast, keep fixtures lean, and
+focus on invariants not brittle snapshots.</li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>DB Realism</strong>: Use a real Postgres instance to catch
+SQL issues early; accept setup overhead (Docker/local cluster).</li>
+<li><strong>Isolation</strong>: Use transaction rollback or template
+clone for deterministic tests; template needs privileges; transactions
+are fast.</li>
+<li><strong>Parallelism</strong>: One DB per worker to avoid lock
+contention; watch resource usage; template cloning helps.</li>
+<li><strong>Data Setup</strong>: Use factories plus minimal seeds for
+clear intent; more helper code; factory functions.</li>
+<li><strong>Deterministic Time</strong>: Freeze the clock for stable
+assertions; add a time helper abstraction.</li>
+<li><strong>Randomness</strong>: Seed the RNG for reproducibility; track
+global seed.</li>
+<li><strong>Slow Tests</strong>: Profile and move up the pyramid for
+faster feedback; tag tests.</li>
+<li><strong>Flakiness</strong>: Make ORDER BY explicit to avoid
+nondeterministic order; stabilize suite.</li>
+<li><strong>Schema Drift</strong>: Migrate fresh each run to catch
+missing migrations; cache template to speed startup.</li>
+<li><strong>Cleanup</strong>: Roll back or drop DBs to avoid residual
+state; use harness scripts.</li>
+<li><strong>Assertion Scope</strong>: Prefer structural invariants over
+brittle snapshots; use domain-specific asserts.</li>
+<li><strong>Pitfalls</strong>: Over-mocking hides integration bugs;
+massive fixtures increase debug time; refactor to factories.</li>
+</ul>
+<p>Principle: Aim for high signal and low brittleness to build trust in
+failures.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>https://www.postgresql.org/docs/current/sql-rollback.html</li>
+<li>https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS</li>
+<li>https://www.postgresql.org/docs/current/manage-ag-config.html#MANAGE-AG-CONFIG-CREATE-DB-TEMPLATE</li>
+</ul>
+</body>
+</html>

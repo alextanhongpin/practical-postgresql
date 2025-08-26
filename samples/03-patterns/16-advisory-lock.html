@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>16-advisory-lock</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="advisory-locks-one-at-a-time">Advisory Locks (One at a
+Time)</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>You have a nightly job that sometimes starts twice from two workers,
+causing duplicated emails. You want only one to run at a time without
+adding new infrastructure.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>Advisory locks are app‑defined mutexes keyed by integers. They’re
+separate from row/table locks.</li>
+<li>Two flavors: session locks (held until released/connection closes)
+and transaction locks (auto‑release on commit/rollback).</li>
+<li>Prefer try‑lock variants when skipping is acceptable.</li>
+</ul>
+<p>Advisory locks are simple, app-controlled locks. Use them when you
+want only one session to run a piece of work at a time. They do not lock
+tables or rows for you. You pick a key; Postgres keeps a lock on that
+key.</p>
+<h2 id="implementation-step-by-step-sql">Implementation (step by step
+SQL)</h2>
+<p>Examples:</p>
+<ul>
+<li>“Run the nightly job once, even if 5 workers start it.”</li>
+<li>“Make sure only one process rebuilds a report right now.”</li>
+</ul>
+<h2 id="two-types">Two types</h2>
+<ul>
+<li>Session lock: stays until you release it or the connection
+closes.</li>
+<li>Transaction lock: releases automatically on COMMIT or ROLLBACK.</li>
+</ul>
+<p>Use a transaction lock for short critical sections. Use a session
+lock if the protected work spans multiple statements or
+transactions.</p>
+<h2 id="core-calls-single-64-bit-key">Core calls (single 64-bit
+key)</h2>
+<ul>
+<li><code>pg_advisory_lock(bigint)</code> waits until the key is
+free.</li>
+<li><code>pg_try_advisory_lock(bigint)</code> returns immediately with
+true/false.</li>
+<li><code>pg_advisory_xact_lock(bigint)</code> is like
+<code>pg_advisory_lock</code> but auto-releases at transaction end.</li>
+<li><code>pg_advisory_unlock(bigint)</code> releases a session
+lock.</li>
+</ul>
+<p>There are also two-key versions that take two 32-bit integers, for
+example: <code>pg_advisory_lock(int, int)</code>. This is handy to
+“namespace” a lock, such as (tenant_id, resource_id).</p>
+<h2 id="basic-usage">Basic usage</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_advisory_lock(<span class="dv">12345</span>);  <span class="co">-- acquire</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">-- do critical work</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_advisory_unlock(<span class="dv">12345</span>); <span class="co">-- release</span></span></code></pre></div>
+<p>Transaction-scoped:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span>;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_advisory_xact_lock(<span class="dv">67890</span>);</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">-- work</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">COMMIT</span>; <span class="co">-- auto release</span></span></code></pre></div>
+<p>Non-blocking attempt:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_try_advisory_lock(<span class="dv">42</span>) <span class="kw">AS</span> got; <span class="co">-- run only if got = true</span></span></code></pre></div>
+<h2 id="hashing-text-names-into-keys">Hashing text names into keys</h2>
+<p>You can hash a string to a 64-bit key for the single-key
+functions:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_try_advisory_lock(hashtextextended(<span class="st">&#39;nightly-maintenance&#39;</span>, <span class="dv">0</span>));</span></code></pre></div>
+<p>For two-key functions (each key is 32-bit), use <code>hashtext</code>
+for both parts:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pg_try_advisory_lock(hashtext(<span class="st">&#39;tenant:7&#39;</span>), hashtext(<span class="st">&#39;refresh-report&#39;</span>));</span></code></pre></div>
+<h2 id="pattern-idempotent-job-runner">Pattern: idempotent job
+runner</h2>
+<p>Your job runner can do a quick check like this:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> attempt <span class="kw">AS</span> (</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> pg_try_advisory_lock(hashtext(<span class="st">&#39;job:daily-email&#39;</span>)) <span class="kw">AS</span> ok</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="cf">CASE</span> <span class="cf">WHEN</span> ok <span class="cf">THEN</span> <span class="st">&#39;run&#39;</span> <span class="cf">ELSE</span> <span class="st">&#39;skip&#39;</span> <span class="cf">END</span> <span class="kw">FROM</span> attempt;</span></code></pre></div>
+<p>If it returns “skip”, another worker already holds the lock.</p>
+<h2 id="pattern-per-account-mutex">Pattern: per-account mutex</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">CREATE</span> <span class="kw">OR</span> <span class="kw">REPLACE</span> <span class="kw">FUNCTION</span> process_account(_acct BIGINT)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>RETURNS VOID</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>LANGUAGE plpgsql</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">AS</span> $$</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="kw">DECLARE</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">locked</span> <span class="dt">BOOLEAN</span>;</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="cf">BEGIN</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> pg_try_advisory_lock(_acct) <span class="kw">INTO</span> <span class="kw">locked</span>;</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="cf">IF</span> <span class="kw">NOT</span> <span class="kw">locked</span> <span class="cf">THEN</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    RAISE NOTICE <span class="st">&#39;Account % busy; skip&#39;</span>, _acct;</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">RETURN</span>;</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span> <span class="cf">IF</span>;</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">-- Ensure we always release the lock</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">BEGIN</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">-- critical work here</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">NULL</span>; <span class="co">-- placeholder</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>  <span class="kw">EXCEPTION</span> <span class="cf">WHEN</span> OTHERS <span class="cf">THEN</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    PERFORM pg_advisory_unlock(_acct);</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    RAISE; <span class="co">-- bubble up the error</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="cf">END</span>;</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  PERFORM pg_advisory_unlock(_acct);</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="cf">END</span>;</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>$$;</span></code></pre></div>
+<h2 id="pitfalls-in-plain-words">Pitfalls (in plain words)</h2>
+<ul>
+<li>Forgetting to release a session lock keeps it held until the
+connection ends.</li>
+<li>Holding a lock while doing slow work makes other sessions wait.</li>
+<li>Hash collisions (rare) can serialize unrelated work. Use two-key
+locks to reduce risk.</li>
+<li>Sometimes row locks (<code>SELECT ... FOR UPDATE</code>) are a
+better, simpler fit.</li>
+<li>Be consistent in how you build keys across services. The same work
+must map to the same key.</li>
+<li>Avoid taking multiple advisory locks in different orders across code
+paths; that can deadlock.</li>
+</ul>
+<p>Tip: when skipping is okay, prefer <code>pg_try_advisory_lock</code>
+over waiting. You can also set <code>statement_timeout</code> to avoid
+waiting too long.</p>
+<h2 id="monitoring-locks">Monitoring locks</h2>
+<p>See who holds what:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> pid,</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>       locktype,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>       classid,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>       objid,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>       objsubid,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>       pg_blocking_pids(pid) <span class="kw">AS</span> blocked_by</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> pg_locks</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> locktype <span class="op">=</span> <span class="st">&#39;advisory&#39;</span>;</span></code></pre></div>
+<p>Count them:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="fu">COUNT</span>(<span class="op">*</span>) <span class="kw">FROM</span> pg_locks <span class="kw">WHERE</span> locktype <span class="op">=</span> <span class="st">&#39;advisory&#39;</span>;</span></code></pre></div>
+<h2 id="good-practices">Good practices</h2>
+<ul>
+<li>Keep the critical section small.</li>
+<li>Prefer the try variant when you can skip.</li>
+<li>Log how long you hold the lock for jobs that may grow over
+time.</li>
+<li>Use two-key locks (or a clear naming scheme) to avoid accidental
+collisions.</li>
+<li>Remember: these locks are in-memory and do not survive a server
+restart.</li>
+</ul>
+<h2 id="when-not-to-use">When not to use</h2>
+<ul>
+<li>Enforcing relational rules (let UNIQUE/FK constraints do that).</li>
+<li>High-frequency per-row writes where row-level locks are enough.</li>
+<li>Cross-database or cross-service coordination (consider an external
+lock service).</li>
+</ul>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>Single 64‑bit vs two 32‑bit keys: the two‑key form helps reduce
+accidental collisions and gives a natural namespace.</li>
+<li>Session locks survive across transactions but not restarts;
+transaction locks auto‑release, which is safer for short tasks.</li>
+<li>External lock services (like Redis/etcd) can coordinate across
+databases/services, but add complexity.</li>
+</ul>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Advisory locks are a small mutex toolkit built into Postgres. Use
+them on purpose, keep the locked work short, and release quickly. They
+prevent duplicate work without new infrastructure.</p>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Wrap a maintenance job with
+pg_try_advisory_lock(hashtextextended(‘job:nightly’,0)) and log if it
+skips.</li>
+<li>Convert a session‑scoped lock to a transaction‑scoped one and
+observe behavior on errors.</li>
+<li>Build a two‑key scheme: (tenant_id, ‘recalc’) using hashtext for the
+second key.</li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Purpose</strong>: Lightweight mutual exclusion keyed by
+app-defined integer(s).</li>
+<li><strong>Acquire</strong>: pg_advisory_lock, pg_try_advisory_lock, or
+pg_advisory_xact_lock.</li>
+<li><strong>Release</strong>: pg_advisory_unlock or at transaction
+end.</li>
+<li><strong>Key Strategy</strong>: Hash string names; prefer two keys to
+reduce collisions.</li>
+<li><strong>Use Cases</strong>: Singleton job runner, per-account
+serialization, rare critical sections.</li>
+<li><strong>Pitfalls</strong>: Forgotten unlocks, long-held locks, hash
+collisions, inconsistent keying.</li>
+<li><strong>Monitoring</strong>: Inspect pg_locks where locktype =
+‘advisory’.</li>
+<li><strong>Alternatives</strong>: Row locks or an external distributed
+lock service.</li>
+</ul>
+<h2 id="references">References</h2>
+<ul>
+<li>Advisory locks:
+https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS</li>
+</ul>
+</body>
+</html>

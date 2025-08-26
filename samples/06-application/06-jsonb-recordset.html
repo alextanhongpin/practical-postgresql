@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang xml:lang>
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>06-jsonb-recordset</title>
+  <style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+
+ul.task-list[class]{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+font-size: inherit;
+width: 0.8em;
+margin: 0 0.8em 0.2em -1.6em;
+vertical-align: middle;
+}
+.display.math{display: block; text-align: center; margin: 0.5rem auto;}
+
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+  <style type="text/css">
+body {
+font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+background: #f9f9f9;
+color: #222;
+margin: 2em auto;
+max-width: 800px;
+padding: 2em;
+box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+h1, h2, h3, h4, h5, h6 {
+color: #2a5d9f;
+margin-top: 2em;
+margin-bottom: 0.5em;
+}
+p {
+line-height: 1.7;
+margin: 1em 0;
+}
+ul, ol {
+margin: 1em 0 1em 2em;
+}
+pre, code {
+background: #f4f4f4;
+border-radius: 4px;
+font-family: 'Fira Mono', 'Consolas', monospace;
+}
+pre {
+padding: 1em;
+overflow-x: auto;
+}
+code {
+padding: 0.2em 0.4em;
+font-size: 1em;
+}
+a {
+color: #2a5d9f;
+text-decoration: none;
+}
+a:hover {
+text-decoration: underline;
+}
+table {
+border-collapse: collapse;
+margin: 2em 0;
+width: 100%;
+}
+th, td {
+border: 1px solid #ddd;
+padding: 0.5em 1em;
+}
+th {
+background: #f0f4fa;
+}
+blockquote {
+border-left: 4px solid #2a5d9f;
+background: #f4f8fc;
+margin: 1em 0;
+padding: 0.5em 1em;
+color: #555;
+}
+img {
+max-width: 100%;
+display: block;
+margin: 1em auto;
+}
+</style>
+</head>
+<body>
+<h1 id="jsonb-recordset-expansion">JSONB Recordset Expansion</h1>
+<h2 id="problem-context">Problem / Context</h2>
+<p>Your service receives arrays of JSON objects (users, products,
+events) and you need to insert or upsert them as rows. You want a single
+set-based query instead of looping, with validation and safe updates
+when records already exist.</p>
+<p>Convert JSON array of objects into relational rows.</p>
+<h2 id="core-concept">Core Concept</h2>
+<ul>
+<li>jsonb_to_recordset turns an array of objects into rows with a
+declared column schema.</li>
+<li>Pair it with INSERT … ON CONFLICT for set-based upserts; guard with
+a freshness column to avoid stale overwrites.</li>
+<li>For heavy validation, stage first, validate, then merge.</li>
+</ul>
+<h2 id="implementation-step-by-step-sql">Implementation (Step by Step
+SQL)</h2>
+<h2 id="jsonb_to_recordset">jsonb_to_recordset</h2>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sql"><code class="sourceCode sql"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">WITH</span> incoming <span class="kw">AS</span> (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> jsonb_to_recordset($<span class="dv">1</span>:<span class="ch">:jsonb</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">AS</span> t(<span class="kw">id</span> uuid, name text, attrs jsonb, updated_at timestamptz)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">INSERT</span> <span class="kw">INTO</span> users <span class="kw">AS</span> u (<span class="kw">id</span>, name, attrs, updated_at)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">SELECT</span> <span class="kw">id</span>, name, attrs, updated_at</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">FROM</span> incoming</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">ON</span> CONFLICT (<span class="kw">id</span>) DO <span class="kw">UPDATE</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">SET</span> name <span class="op">=</span> EXCLUDED.name,</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    attrs <span class="op">=</span> EXCLUDED.attrs,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    updated_at <span class="op">=</span> EXCLUDED.updated_at</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">WHERE</span> u.updated_at <span class="op">&lt;</span> EXCLUDED.updated_at;</span></code></pre></div>
+<h2 id="dynamic-columns">Dynamic Columns</h2>
+<p>Define only needed columns; extra keys ignored unless captured as
+jsonb.</p>
+<h2 id="validation">Validation</h2>
+<p>Pre-validate JSON schema in app or use CHECK constraints on computed
+columns.</p>
+<h2 id="performance">Performance</h2>
+<ul>
+<li>Pass JSONB not text for fewer casts.</li>
+<li>Keep batch size moderate (avoid giant single JSON document).</li>
+</ul>
+<h2 id="when-to-use-vs-unnest-arrays">When to Use vs UNNEST Arrays</h2>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Prefer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Many optional fields</td>
+<td>Recordset</td>
+</tr>
+<tr>
+<td>Uniform typed columns</td>
+<td>UNNEST</td>
+</tr>
+<tr>
+<td>Sparse wide objects</td>
+<td>Recordset</td>
+</tr>
+</tbody>
+</table>
+<h2 id="related">Related</h2>
+<p>For CRUD path updates see 13-jsonb-crud.md.</p>
+<h2 id="variations-and-tradeoffs">Variations and Trade‑Offs</h2>
+<ul>
+<li>Recordset vs staging: recordset is concise; staging adds
+observability and richer validation.</li>
+<li>Freshness vs version: timestamp comparisons are simple but sensitive
+to skew; version columns are robust but need coordination.</li>
+<li>Large batches: chunk input to avoid large single-document parse
+overhead.</li>
+</ul>
+<h2 id="pitfalls">Pitfalls</h2>
+<ul>
+<li>Mismatched declared types cause runtime errors; define the recordset
+schema carefully.</li>
+<li>Very large JSON arrays can cause high memory/parse time; chunk into
+multiple calls.</li>
+<li>Clock skew can let stale rows overwrite fresh ones; choose a
+reliable freshness strategy.</li>
+</ul>
+<h2 id="recap-short-summary">Recap (Short Summary)</h2>
+<p>Turn arrays of JSON objects into rows with jsonb_to_recordset and
+upsert them with one statement. Use freshness guards and consider
+staging for complex validation.</p>
+<h2 id="optional-exercises">Optional Exercises</h2>
+<ul>
+<li>Switch freshness guard to a version integer and compare
+behavior.</li>
+<li>Add a CHECK enforcing a required key via a generated column and test
+failures.</li>
+<li>Benchmark ingest speed for different batch sizes of JSON arrays.
+jsonb_to_recordset bridges schemaless ingest with relational
+constraints, enabling set-based UPSERT without staging tables.</li>
+</ul>
+<h2 id="summary-cheat-sheet">Summary (Cheat Sheet)</h2>
+<ul>
+<li><strong>Ingest Array of Objects</strong>: Use jsonb_to_recordset for
+set-based ingest in one round trip. Validate row count matches input
+length. Prefer UNNEST for narrow fixed columns.</li>
+<li><strong>Sparse Wide Objects</strong>: Use recordset with selective
+columns to ignore unknown keys; note uncaptured keys are lost. Consider
+a staging table for heavy validation.</li>
+<li><strong>Upsert with Freshness</strong>: Use ON CONFLICT with a WHERE
+updated_at &lt; EXCLUDED.updated_at to avoid stale overwrite. Beware
+clock skew; compare timestamp source or use version columns.</li>
+<li><strong>Partial Column Set</strong>: Omit unspecified columns for
+simplicity; defaults apply. Generated columns help derived fields.</li>
+<li><strong>Validation</strong>: Use CHECK/domain constraints for shape;
+invalid rows abort the batch. Pre-validate in app for better UX.</li>
+<li><strong>Large Batch</strong>: Keep JSON size moderate to limit parse
+cost; monitor memory; chunk into multiple calls if needed.</li>
+<li><strong>Dynamic Schema</strong>: Add columns as needed, but review
+schema to prevent hidden drift. Migrate once stable.</li>
+<li><strong>Audit</strong>: Include a source metadata column for
+traceability; validate ingestion metrics. Use staging if audit is
+complex.</li>
+<li><strong>Pitfalls</strong>: Wrong column order causing mis-mapped
+types; over-large documents causing slow ingest. Use explicit field
+lists; split files.</li>
+</ul>
+<p>Guideline: Use recordset for moderately wide semi-structured batches;
+switch to staging when validation complexity rises.</p>
+<h2 id="references">References</h2>
+<ul>
+<li>json_to_recordset / jsonb_to_recordset:
+https://www.postgresql.org/docs/current/functions-json.html#FUNCTIONS-JSON-PROCESSING-TABLES</li>
+<li>LATERAL joins:
+https://www.postgresql.org/docs/current/queries-table-expressions.html#QUERIES-LATERAL</li>
+<li>SQL/JSON path queries:
+https://www.postgresql.org/docs/current/functions-json.html#FUNCTIONS-SQLJSON-PATH</li>
+</ul>
+</body>
+</html>
